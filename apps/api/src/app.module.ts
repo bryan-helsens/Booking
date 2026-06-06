@@ -1,4 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ClsModule, ClsMiddleware } from 'nestjs-cls';
 import { PrismaModule } from './prisma/prisma.module';
 import { CommonModule } from './common/common.module';
@@ -13,6 +15,9 @@ import { TenantsModule } from './modules/tenants/tenants.module';
 @Module({
   imports: [
     ClsModule.forRoot({ global: true, middleware: { mount: false } }),
+    // Global rate limit: 120 requests / minute / IP (storefront loads several
+    // endpoints per page). Stricter per-route limits live on auth/signup.
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 120 }]),
     PrismaModule,
     CommonModule,
     AuthModule,
@@ -22,6 +27,7 @@ import { TenantsModule } from './modules/tenants/tenants.module';
     MediaModule,
     TenantsModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

@@ -6,6 +6,8 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // Trust the platform proxy (Render/Netlify) so rate-limiting sees real client IPs.
+  app.set('trust proxy', 1);
   app.setGlobalPrefix('api');
   // Restrict CORS to configured origins in production; reflect any origin in dev.
   const allowed = (process.env.CORS_ORIGINS || '')
