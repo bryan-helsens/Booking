@@ -6,6 +6,12 @@
     </div>
 
     <el-table :data="services" stripe>
+      <el-table-column label="" width="70">
+        <template #default="{ row }">
+          <el-avatar v-if="row.imageUrl" :src="row.imageUrl" shape="square" :size="40" />
+          <el-avatar v-else shape="square" :size="40"><el-icon><Star /></el-icon></el-avatar>
+        </template>
+      </el-table-column>
       <el-table-column prop="name" label="Naam" />
       <el-table-column label="Duur" width="100"><template #default="{ row }">{{ row.durationMin }} min</template></el-table-column>
       <el-table-column label="Prijs" width="100"><template #default="{ row }">{{ euro(row.priceCents) }}</template></el-table-column>
@@ -24,6 +30,7 @@
       <el-form label-position="top">
         <el-form-item label="Naam"><el-input v-model="form.name" /></el-form-item>
         <el-form-item label="Beschrijving"><el-input v-model="form.description" type="textarea" /></el-form-item>
+        <el-form-item label="Afbeelding"><ImageUploader v-model="form.imageUrl" /></el-form-item>
         <el-row :gutter="12">
           <el-col :span="12"><el-form-item label="Duur (min)"><el-input-number v-model="form.durationMin" :min="5" :step="5" /></el-form-item></el-col>
           <el-col :span="12"><el-form-item label="Prijs (€)"><el-input-number v-model="priceEuro" :min="0" :step="0.5" /></el-form-item></el-col>
@@ -48,12 +55,13 @@ import { computed, onMounted, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Plus, Edit, Delete } from '@element-plus/icons-vue';
 import { api } from '@/api/client';
+import ImageUploader from '@/components/ImageUploader.vue';
 import type { Service } from '@/types';
 
 const services = ref<Service[]>([]);
 const dialog = ref(false);
 const saving = ref(false);
-const blank = () => ({ id: '', name: '', description: '', durationMin: 60, priceCents: 0, capacity: 1, bufferBefore: 0, bufferAfter: 0, isActive: true });
+const blank = () => ({ id: '', name: '', description: '', imageUrl: '', durationMin: 60, priceCents: 0, capacity: 1, bufferBefore: 0, bufferAfter: 0, isActive: true });
 const form = ref<any>(blank());
 
 const priceEuro = computed({

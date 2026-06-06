@@ -37,6 +37,8 @@ model Tenant {
   services      Service[]
   businessHours BusinessHours[]
   bookings      Booking[]
+  reviews       Review[]
+  coupons       Coupon[]
 }
 
 model Domain {
@@ -142,6 +144,7 @@ model Service {
   tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name         String
   description  String    @default("")
+  imageUrl     String    @default("")
   durationMin  Int       @default(60)
   priceCents   Int       @default(0)
   capacity     Int       @default(1)
@@ -163,6 +166,31 @@ model BusinessHours {
   isClosed Boolean @default(false)
 
   @@unique([tenantId, weekday])
+  @@index([tenantId])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  author     String
+  rating     Int      @default(5)
+  quote      String
+  isApproved Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([tenantId])
+}
+
+model Coupon {
+  id         String  @id @default(cuid())
+  tenantId   String
+  tenant     Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  code       String
+  percentOff Int     @default(0)
+  isActive   Boolean @default(true)
+
+  @@unique([tenantId, code])
   @@index([tenantId])
 }
 

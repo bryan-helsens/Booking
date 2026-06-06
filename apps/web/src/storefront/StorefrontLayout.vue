@@ -3,16 +3,26 @@
     <header class="sf-header">
       <div class="sf-container bar">
         <router-link to="/" class="brand">
-          <img v-if="content?.logoUrl" :src="content.logoUrl" alt="logo" class="logo" />
+          <img v-if="content?.logoUrl" :src="content.logoUrl" alt="logo" class="logo" @error="logoErr = true" v-show="!logoErr" />
           <span class="name">{{ content?.companyName }}</span>
         </router-link>
-        <nav class="nav">
+        <nav class="nav desktop">
           <router-link to="/">Home</router-link>
           <router-link to="/booking">Boeken</router-link>
           <el-button type="primary" round size="small" @click="$router.push('/booking')">Afspraak maken</el-button>
         </nav>
+        <el-button class="burger" text :icon="Menu" @click="drawer = true" />
       </div>
     </header>
+
+    <el-drawer v-model="drawer" direction="rtl" size="70%" :with-header="false">
+      <div class="drawer-nav">
+        <span class="d-brand">{{ content?.companyName }}</span>
+        <router-link to="/" @click="drawer = false">Home</router-link>
+        <router-link to="/booking" @click="drawer = false">Boeken</router-link>
+        <el-button type="primary" round @click="drawer = false; $router.push('/booking')">Afspraak maken</el-button>
+      </div>
+    </el-drawer>
 
     <main>
       <router-view />
@@ -20,17 +30,22 @@
 
     <footer class="sf-footer">
       <div class="sf-container foot">
-        <div>
+        <div class="col">
           <strong>{{ content?.companyName }}</strong>
           <p>{{ content?.description }}</p>
         </div>
-        <div class="social">
+        <div class="col social">
           <a v-if="content?.social.facebook" :href="content.social.facebook" target="_blank"><el-icon><Share /></el-icon> Facebook</a>
           <a v-if="content?.social.instagram" :href="content.social.instagram" target="_blank"><el-icon><Camera /></el-icon> Instagram</a>
           <a v-if="content?.social.x" :href="content.social.x" target="_blank"><el-icon><ChatLineRound /></el-icon> X</a>
         </div>
-        <router-link to="/admin" class="admin-link">Admin →</router-link>
+        <div class="col">
+          <p v-if="content?.contact.address"><el-icon><Location /></el-icon> {{ content.contact.address }}</p>
+          <p v-if="content?.contact.phone"><el-icon><Phone /></el-icon> {{ content.contact.phone }}</p>
+          <router-link to="/admin" class="admin-link">Admin →</router-link>
+        </div>
       </div>
+      <div class="copyright">© {{ year }} {{ content?.companyName }} · Gebouwd met het Booking Platform</div>
     </footer>
 
     <!-- Demo helper: switch tenant to showcase white-label theming -->
@@ -40,12 +55,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { Menu } from '@element-plus/icons-vue';
 import { useSiteStore } from '@/stores/site';
 import TenantSwitcher from '@/components/TenantSwitcher.vue';
 
 const site = useSiteStore();
 const content = computed(() => site.content);
+const drawer = ref(false);
+const logoErr = ref(false);
+const year = new Date().getFullYear();
 
 onMounted(() => {
   if (!site.loaded) site.bootstrap();
@@ -53,16 +72,28 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.sf-header { position: sticky; top: 0; z-index: 10; background: var(--app-color-bg); border-bottom: 1px solid var(--el-border-color-light); }
-.bar { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.sf-header { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--app-color-bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--el-border-color-light); }
+.bar { display: flex; align-items: center; justify-content: space-between; height: 68px; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--app-color-text); }
-.logo { height: 36px; width: 36px; border-radius: var(--app-radius); }
-.name { font-family: var(--app-font-heading); font-weight: 700; font-size: 1.2rem; }
-.nav { display: flex; align-items: center; gap: 18px; }
-.nav a { text-decoration: none; color: var(--app-color-text); }
-.sf-footer { background: var(--el-fill-color-darker); padding: 40px 24px; margin-top: 40px; }
-.foot { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; align-items: center; }
-.social { display: flex; gap: 16px; }
+.logo { height: 38px; width: 38px; border-radius: var(--app-radius); object-fit: cover; }
+.name { font-family: var(--app-font-heading); font-weight: 700; font-size: 1.25rem; }
+.nav { display: flex; align-items: center; gap: 20px; }
+.nav a { text-decoration: none; color: var(--app-color-text); font-weight: 500; }
+.nav a:hover { color: var(--app-color-primary); }
+.burger { display: none; font-size: 22px; }
+.drawer-nav { display: flex; flex-direction: column; gap: 18px; padding-top: 20px; }
+.drawer-nav a { text-decoration: none; color: var(--app-color-text); font-size: 1.1rem; }
+.d-brand { font-family: var(--app-font-heading); font-weight: 700; font-size: 1.2rem; margin-bottom: 8px; }
+.sf-footer { background: var(--el-fill-color-darker); padding: 48px 24px 20px; margin-top: 40px; }
+.foot { display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+.col { flex: 1; min-width: 200px; }
+.col p { display: flex; align-items: center; gap: 6px; color: var(--el-text-color-secondary); }
+.social { display: flex; flex-direction: column; gap: 10px; }
 .social a { text-decoration: none; display: flex; align-items: center; gap: 6px; }
-.admin-link { color: var(--el-text-color-secondary); text-decoration: none; }
+.admin-link { color: var(--el-text-color-secondary); text-decoration: none; display: inline-block; margin-top: 8px; }
+.copyright { text-align: center; color: var(--el-text-color-secondary); font-size: 0.85rem; margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--el-border-color-lighter); }
+@media (max-width: 768px) {
+  .nav.desktop { display: none; }
+  .burger { display: inline-flex; }
+}
 </style>

@@ -1,4 +1,5 @@
 import type { ThemeTokens } from '@/types';
+import { ensureFonts } from './fonts';
 
 /**
  * Theme Engine: maps database design tokens → CSS custom properties on :root,
@@ -7,6 +8,9 @@ import type { ThemeTokens } from '@/types';
  */
 export function applyTokens(tokens: ThemeTokens, mode: 'light' | 'dark') {
   const root = document.documentElement;
+
+  // Load the chosen web fonts so the typography actually changes.
+  ensureFonts([tokens.fontBody, tokens.fontHeading]);
 
   // Our app-level tokens
   root.style.setProperty('--app-color-primary', tokens.colorPrimary);

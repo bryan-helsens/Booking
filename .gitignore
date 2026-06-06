@@ -9,6 +9,10 @@ apps/api/prisma/*.db-journal
 apps/api/prisma/dev.db
 apps/api/prisma/schema.prod.prisma
 
+# Uploaded media (demo stores on local disk)
+apps/api/uploads/
+uploads/
+
 # env
 .env
 .env.local
@@ -16,3 +20,7 @@ apps/api/prisma/schema.prod.prisma
 # build
 apps/web/dist/
 apps/api/dist/
+
+# Local screenshot artifacts
+_screens/
+_*.mjs

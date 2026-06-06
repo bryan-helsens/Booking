@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { SiteModule } from './modules/site/site.module';
 import { PagesModule } from './modules/pages/pages.module';
 import { BookingModule } from './modules/booking/booking.module';
+import { MediaModule } from './modules/media/media.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { BookingModule } from './modules/booking/booking.module';
     SiteModule,
     PagesModule,
     BookingModule,
+    MediaModule,
   ],
 })
 export class AppModule implements NestModule {

@@ -8,9 +8,8 @@
   publish = "apps/web/dist"
 
 [build.environment]
-  # ⬇️ Replace with your Render API URL (no trailing slash), e.g.
-  #    https://booking-api.onrender.com
-  VITE_API_URL = "https://REPLACE-WITH-YOUR-RENDER-API.onrender.com"
+  # Render API URL (no trailing slash). Override in Netlify UI if it changes.
+  VITE_API_URL = "https://booking-api-nosm.onrender.com"
 
 # SPA fallback so Vue Router (history mode) handles deep links like /admin/builder.
 [[redirects]]

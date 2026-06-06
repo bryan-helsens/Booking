@@ -87,6 +87,41 @@ const COMPONENTS = [
     },
     defaults: { title: 'Contact' },
   },
+  {
+    type: 'gallery',
+    label: 'Galerij',
+    icon: 'Picture',
+    category: 'content',
+    propsSchema: {
+      title: { type: 'string', label: 'Titel' },
+      images: { type: 'textarea', label: 'Afbeeldings-URLs (één per regel)' },
+    },
+    defaults: { title: 'Galerij', images: '' },
+  },
+  {
+    type: 'openinghours',
+    label: 'Openingstijden',
+    icon: 'Clock',
+    category: 'content',
+    propsSchema: {
+      title: { type: 'string', label: 'Titel' },
+    },
+    defaults: { title: 'Openingstijden' },
+  },
+  {
+    type: 'faq',
+    label: 'FAQ',
+    icon: 'QuestionFilled',
+    category: 'content',
+    propsSchema: {
+      title: { type: 'string', label: 'Titel' },
+      items: { type: 'textarea', label: 'Vraag|Antwoord (één per regel)' },
+    },
+    defaults: {
+      title: 'Veelgestelde vragen',
+      items: 'Hoe boek ik?|Kies een dienst en tijdslot via de boekingspagina.\nKan ik annuleren?|Ja, tot 24u van tevoren kosteloos.',
+    },
+  },
 ];
 
 const FEATURE_KEYS = [
@@ -120,6 +155,8 @@ interface TenantSeed {
   services: any[];
   pageSections: any[];
   features: Record<string, boolean>;
+  reviews: { author: string; rating: number; quote: string }[];
+  coupons: { code: string; percentOff: number }[];
 }
 
 const TENANTS: TenantSeed[] = [
@@ -148,18 +185,26 @@ const TENANTS: TenantSeed[] = [
       social: { facebook: 'https://facebook.com/acme', instagram: 'https://instagram.com/acme', x: '', linkedin: '' },
     },
     services: [
-      { name: 'Ontspanningsmassage', description: '60 min volledige lichaamsmassage.', durationMin: 60, priceCents: 7500, capacity: 1, bufferAfter: 15 },
-      { name: 'Hot Stone Therapie', description: 'Warme stenen behandeling.', durationMin: 90, priceCents: 11000, capacity: 1, bufferAfter: 15 },
-      { name: 'Gezichtsbehandeling', description: 'Verzorgende facial.', durationMin: 45, priceCents: 6000, capacity: 2 },
+      { name: 'Ontspanningsmassage', description: '60 min volledige lichaamsmassage.', imageUrl: 'https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=600', durationMin: 60, priceCents: 7500, capacity: 1, bufferAfter: 15 },
+      { name: 'Hot Stone Therapie', description: 'Warme stenen behandeling.', imageUrl: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600', durationMin: 90, priceCents: 11000, capacity: 1, bufferAfter: 15 },
+      { name: 'Gezichtsbehandeling', description: 'Verzorgende facial.', imageUrl: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600', durationMin: 45, priceCents: 6000, capacity: 2 },
     ],
     pageSections: [
       { id: 's1', type: 'hero', visible: true, props: { title: 'Welkom bij Acme Wellness', subtitle: 'Even helemaal tot rust komen.', ctaLabel: 'Boek je behandeling', bgImage: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1600', align: 'center' } },
       { id: 's2', type: 'services', visible: true, props: { title: 'Onze behandelingen', columns: 3 } },
-      { id: 's3', type: 'booking', visible: true, props: { title: 'Maak een afspraak' } },
-      { id: 's4', type: 'testimonials', visible: true, props: { title: 'Wat onze gasten zeggen' } },
-      { id: 's5', type: 'contact', visible: true, props: { title: 'Bezoek ons' } },
+      { id: 's3', type: 'openinghours', visible: true, props: { title: 'Openingstijden' } },
+      { id: 's4', type: 'booking', visible: true, props: { title: 'Maak een afspraak' } },
+      { id: 's5', type: 'testimonials', visible: true, props: { title: 'Wat onze gasten zeggen' } },
+      { id: 's6', type: 'faq', visible: true, props: { title: 'Veelgestelde vragen', items: 'Hoe boek ik een behandeling?|Kies een dienst en een tijdslot via de boekingspagina.\nKan ik kosteloos annuleren?|Ja, tot 24 uur van tevoren.\nBieden jullie cadeaubonnen aan?|Ja, neem contact op voor meer info.' } },
+      { id: 's7', type: 'contact', visible: true, props: { title: 'Bezoek ons' } },
     ],
     features: { payments: false, reviews: true, waitlist: true, coupons: true, giftcards: false, email: true, sms: false },
+    reviews: [
+      { author: 'Sanne de Vries', rating: 5, quote: 'Heerlijk ontspannen! De massage was fantastisch en het personeel super vriendelijk.' },
+      { author: 'Mark Jansen', rating: 5, quote: 'Top service van begin tot eind. Kom zeker terug.' },
+      { author: 'Iris Bakker', rating: 4, quote: 'Makkelijk online te boeken en een prachtige locatie.' },
+    ],
+    coupons: [{ code: 'WELKOM10', percentOff: 10 }],
   },
   {
     slug: 'studio',
@@ -186,18 +231,25 @@ const TENANTS: TenantSeed[] = [
       social: { facebook: '', instagram: 'https://instagram.com/studionoir', x: 'https://x.com/studionoir', linkedin: '' },
     },
     services: [
-      { name: 'Classic Cut', description: 'Knippen incl. styling.', durationMin: 30, priceCents: 3000, capacity: 1, bufferAfter: 5 },
-      { name: 'Baard Trim', description: 'Baard bijwerken & verzorgen.', durationMin: 20, priceCents: 2000, capacity: 1 },
-      { name: 'Hot Towel Shave', description: 'Klassieke scheerbeurt.', durationMin: 45, priceCents: 4000, capacity: 1, bufferAfter: 10 },
+      { name: 'Classic Cut', description: 'Knippen incl. styling.', imageUrl: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600', durationMin: 30, priceCents: 3000, capacity: 1, bufferAfter: 5 },
+      { name: 'Baard Trim', description: 'Baard bijwerken & verzorgen.', imageUrl: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=600', durationMin: 20, priceCents: 2000, capacity: 1 },
+      { name: 'Hot Towel Shave', description: 'Klassieke scheerbeurt.', imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=600', durationMin: 45, priceCents: 4000, capacity: 1, bufferAfter: 10 },
     ],
     pageSections: [
       { id: 's1', type: 'hero', visible: true, props: { title: 'STUDIO NOIR', subtitle: 'Sharp cuts. No compromise.', ctaLabel: 'Book a chair', bgImage: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1600', align: 'left' } },
       { id: 's2', type: 'services', visible: true, props: { title: 'Services', columns: 3 } },
       { id: 's3', type: 'richtext', visible: true, props: { heading: 'Craftsmanship', body: 'Al 15 jaar het adres voor de scherpste cuts van Rotterdam.' } },
-      { id: 's4', type: 'booking', visible: true, props: { title: 'Book your slot' } },
-      { id: 's5', type: 'contact', visible: true, props: { title: 'Find us' } },
+      { id: 's4', type: 'gallery', visible: true, props: { title: 'Our work', images: 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=600\nhttps://images.unsplash.com/photo-1605497788044-5a32c7078486?w=600\nhttps://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=600' } },
+      { id: 's5', type: 'booking', visible: true, props: { title: 'Book your slot' } },
+      { id: 's6', type: 'testimonials', visible: true, props: { title: 'Reviews' } },
+      { id: 's7', type: 'contact', visible: true, props: { title: 'Find us' } },
     ],
-    features: { payments: false, reviews: false, waitlist: false, coupons: true, giftcards: true, email: true, sms: false },
+    features: { payments: false, reviews: true, waitlist: false, coupons: true, giftcards: true, email: true, sms: false },
+    reviews: [
+      { author: 'Tom H.', rating: 5, quote: 'Scherpste fade van de stad. Vakmanschap.' },
+      { author: 'Younes B.', rating: 5, quote: 'Hot towel shave is een aanrader. Echte ervaring.' },
+    ],
+    coupons: [{ code: 'NOIR15', percentOff: 15 }],
   },
 ];
 
@@ -274,6 +326,19 @@ async function seedTenant(t: TenantSeed) {
   await prisma.businessHours.deleteMany({ where: { tenantId: tenant.id } });
   for (const bh of defaultBusinessHours(tenant.id)) {
     await prisma.businessHours.create({ data: bh });
+  }
+
+  await prisma.review.deleteMany({ where: { tenantId: tenant.id } });
+  for (const r of t.reviews) {
+    await prisma.review.create({ data: { tenantId: tenant.id, ...r } });
+  }
+
+  for (const c of t.coupons) {
+    await prisma.coupon.upsert({
+      where: { tenantId_code: { tenantId: tenant.id, code: c.code } },
+      update: { percentOff: c.percentOff, isActive: true },
+      create: { tenantId: tenant.id, code: c.code, percentOff: c.percentOff },
+    });
   }
 
   console.log(`  ✓ ${t.name}  (slug: ${t.slug}, host: ${t.host})`);

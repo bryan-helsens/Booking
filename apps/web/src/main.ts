@@ -7,11 +7,13 @@ import 'element-plus/theme-chalk/dark/css-vars.css';
 import '@/styles/global.css';
 import App from './App.vue';
 import { router } from './router';
+import { reveal } from './directives/reveal';
 
 const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 app.use(ElementPlus);
+app.directive('reveal', reveal);
 for (const [key, comp] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, comp as any);
 }

@@ -65,12 +65,19 @@ export const useSiteStore = defineStore('site', () => {
 
   function updateDocumentMeta() {
     if (!content.value) return;
-    document.title = content.value.seo?.title || content.value.companyName;
-    const desc = document.querySelector('meta[name="description"]') || createMeta('description');
-    desc.setAttribute('content', content.value.seo?.description || '');
-    if (content.value.faviconUrl) {
+    const c = content.value;
+    const title = c.seo?.title || c.companyName;
+    document.title = title;
+    setMeta('name', 'description', c.seo?.description || c.description || '');
+    // Open Graph + Twitter card for nice social sharing previews.
+    setMeta('property', 'og:title', title);
+    setMeta('property', 'og:description', c.seo?.description || c.description || '');
+    setMeta('property', 'og:type', 'website');
+    if (c.seo?.ogImage || c.logoUrl) setMeta('property', 'og:image', c.seo?.ogImage || c.logoUrl);
+    setMeta('name', 'twitter:card', 'summary_large_image');
+    if (c.faviconUrl) {
       const link = (document.querySelector("link[rel='icon']") as HTMLLinkElement) || createLink();
-      link.href = content.value.faviconUrl;
+      link.href = c.faviconUrl;
     }
   }
 
@@ -85,11 +92,14 @@ export const useSiteStore = defineStore('site', () => {
   };
 });
 
-function createMeta(name: string) {
-  const m = document.createElement('meta');
-  m.setAttribute('name', name);
-  document.head.appendChild(m);
-  return m;
+function setMeta(attr: 'name' | 'property', key: string, value: string) {
+  let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement | null;
+  if (!el) {
+    el = document.createElement('meta');
+    el.setAttribute(attr, key);
+    document.head.appendChild(el);
+  }
+  el.setAttribute('content', value);
 }
 function createLink() {
   const l = document.createElement('link');

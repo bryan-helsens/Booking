@@ -60,4 +60,14 @@ export class BookingController {
   updateStatus(@Param('id') id: string, @Body() body: { status: string }) {
     return this.booking.updateBookingStatus(id, body.status);
   }
+
+  @Get('reviews')
+  listReviews() {
+    return this.booking.listReviews();
+  }
+
+  @Get('coupons/validate')
+  validateCoupon(@Query('code') code: string) {
+    return this.booking.validateCoupon(code);
+  }
 }

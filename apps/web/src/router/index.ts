@@ -11,6 +11,7 @@ export const router = createRouter({
       children: [
         { path: '', name: 'home', component: () => import('@/storefront/StorefrontPage.vue') },
         { path: 'booking', name: 'booking', component: () => import('@/storefront/BookingPage.vue') },
+        { path: ':slug', name: 'page', component: () => import('@/storefront/StorefrontPage.vue') },
       ],
     },
     // ── Admin dashboard ──
@@ -30,6 +31,7 @@ export const router = createRouter({
         { path: 'features', name: 'features', component: () => import('@/admin/views/FeaturesView.vue') },
       ],
     },
+    { path: '/:pathMatch(.*)*', name: 'notfound', component: () => import('@/storefront/NotFound.vue') },
   ],
 });
 

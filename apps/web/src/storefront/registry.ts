@@ -5,6 +5,9 @@ import RichTextSection from './sections/RichTextSection.vue';
 import TestimonialsSection from './sections/TestimonialsSection.vue';
 import ContactSection from './sections/ContactSection.vue';
 import BookingSection from './sections/BookingSection.vue';
+import GallerySection from './sections/GallerySection.vue';
+import OpeningHoursSection from './sections/OpeningHoursSection.vue';
+import FaqSection from './sections/FaqSection.vue';
 
 /**
  * Frontend component registry: maps a JSON `section.type` → Vue component.
@@ -18,6 +21,9 @@ export const sectionRegistry: Record<string, Component> = {
   testimonials: TestimonialsSection,
   contact: ContactSection,
   booking: BookingSection,
+  gallery: GallerySection,
+  openinghours: OpeningHoursSection,
+  faq: FaqSection,
 };
 
 export function resolveSection(type: string): Component | null {

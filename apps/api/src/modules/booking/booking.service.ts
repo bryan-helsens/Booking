@@ -32,7 +32,7 @@ export class BookingService {
   }
 
   private cleanService(d: any) {
-    const fields = ['name', 'description', 'durationMin', 'priceCents', 'capacity', 'bufferBefore', 'bufferAfter', 'isActive'];
+    const fields = ['name', 'description', 'imageUrl', 'durationMin', 'priceCents', 'capacity', 'bufferBefore', 'bufferAfter', 'isActive'];
     const out: any = {};
     for (const f of fields) if (d[f] !== undefined) out[f] = d[f];
     return out;
@@ -132,5 +132,22 @@ export class BookingService {
     const b = await this.prisma.booking.findFirst({ where: { id, tenantId: this.ctx.id } });
     if (!b) throw new NotFoundException('Booking not found');
     return this.prisma.booking.update({ where: { id }, data: { status } });
+  }
+
+  // ── Reviews ──
+  listReviews() {
+    return this.prisma.review.findMany({
+      where: { tenantId: this.ctx.id, isApproved: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  // ── Coupons ──
+  async validateCoupon(code: string) {
+    if (!code) return { valid: false, percentOff: 0 };
+    const coupon = await this.prisma.coupon.findFirst({
+      where: { tenantId: this.ctx.id, code: code.trim().toUpperCase(), isActive: true },
+    });
+    return coupon ? { valid: true, code: coupon.code, percentOff: coupon.percentOff } : { valid: false, percentOff: 0 };
   }
 }
