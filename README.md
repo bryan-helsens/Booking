@@ -84,6 +84,12 @@ GET/PUT /api/business-hours     GET /api/availability?serviceId=&date=
 GET/POST /api/bookings · PATCH /api/bookings/:id
 ```
 
+## Deploying (live URL)
+
+Full-stack, so it needs two hosts: **Netlify** (frontend) + **Render**
+(NestJS API + managed Postgres). Config is committed (`netlify.toml`,
+`render.yaml`). Step-by-step guide: see [`DEPLOY.md`](./DEPLOY.md).
+
 ## From demo → production
 
 - Swap SQLite → PostgreSQL (change Prisma `datasource`), enable Row-Level Security.

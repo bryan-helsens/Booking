@@ -1,0 +1,19 @@
+# Netlify config — hosts the Vue storefront + admin (static build).
+# The backend (NestJS) lives on Render; set VITE_API_URL to its URL below
+# (or in Netlify UI → Site settings → Environment variables).
+
+[build]
+  base = "."
+  command = "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @booking/web build"
+  publish = "apps/web/dist"
+
+[build.environment]
+  # ⬇️ Replace with your Render API URL (no trailing slash), e.g.
+  #    https://booking-api.onrender.com
+  VITE_API_URL = "https://REPLACE-WITH-YOUR-RENDER-API.onrender.com"
+
+# SPA fallback so Vue Router (history mode) handles deep links like /admin/builder.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -17,7 +17,11 @@ export function setToken(token: string | null) {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
-export const api = axios.create({ baseURL: '/api' });
+// Local dev → '/api' (proxied to the NestJS server by Vite).
+// Production → set VITE_API_URL to the deployed API origin (e.g. Render).
+const apiBase = `${import.meta.env.VITE_API_URL || ''}/api`;
+
+export const api = axios.create({ baseURL: apiBase });
 
 // Inject the active tenant (white-label resolver) and auth token on every call.
 api.interceptors.request.use((config) => {
