@@ -14,6 +14,7 @@ export const useSiteStore = defineStore('site', () => {
   const theme = ref<ThemeConfig | null>(null);
   const content = ref<SiteContent | null>(null);
   const features = ref<FeatureMap>({});
+  const settings = ref<any>({ bookingRules: {}, regional: { currency: 'EUR', locale: 'nl-NL' }, formFields: [] });
   const loaded = ref(false);
 
   async function bootstrap() {
@@ -22,9 +23,26 @@ export const useSiteStore = defineStore('site', () => {
     theme.value = data.theme;
     content.value = data.content;
     features.value = data.features || {};
+    if (data.settings) settings.value = data.settings;
     if (theme.value) applyTokens(theme.value.tokens, theme.value.mode);
     if (content.value) updateDocumentMeta();
     loaded.value = true;
+  }
+
+  /** Format a price (in cents) using the tenant's currency + locale. */
+  function formatMoney(cents: number) {
+    const r = settings.value?.regional || {};
+    try {
+      return new Intl.NumberFormat(r.locale || 'nl-NL', { style: 'currency', currency: r.currency || 'EUR' }).format((cents || 0) / 100);
+    } catch {
+      return `€ ${((cents || 0) / 100).toFixed(2)}`;
+    }
+  }
+
+  async function saveSettings(payload: any) {
+    const { data } = await api.put('/settings', payload);
+    settings.value = data;
+    return data;
   }
 
   function switchTenant(slug: string) {
@@ -86,8 +104,8 @@ export const useSiteStore = defineStore('site', () => {
   }
 
   return {
-    tenant, theme, content, features, loaded,
-    bootstrap, switchTenant, currentTenant,
+    tenant, theme, content, features, settings, loaded,
+    bootstrap, switchTenant, currentTenant, formatMoney, saveSettings,
     previewTokens, restoreTheme, saveTheme, saveContent, saveFeatures, isEnabled,
   };
 });

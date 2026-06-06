@@ -55,8 +55,11 @@ import { computed, onMounted, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Plus, Edit, Delete } from '@element-plus/icons-vue';
 import { api } from '@/api/client';
+import { useSiteStore } from '@/stores/site';
 import ImageUploader from '@/components/ImageUploader.vue';
 import type { Service } from '@/types';
+
+const site = useSiteStore();
 
 const services = ref<Service[]>([]);
 const dialog = ref(false);
@@ -97,7 +100,7 @@ async function remove(row: Service) {
   await load();
 }
 
-const euro = (c: number) => `€ ${(c / 100).toFixed(2)}`;
+const euro = (c: number) => site.formatMoney(c);
 </script>
 
 <style scoped>

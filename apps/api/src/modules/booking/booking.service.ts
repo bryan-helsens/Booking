@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TenantContext } from '../../common/tenant-context.service';
+import { resolveSettings } from '../../common/settings';
 
 @Injectable()
 export class BookingService {
@@ -70,7 +71,16 @@ export class BookingService {
     if (!service) throw new NotFoundException('Service not found');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new BadRequestException('date must be YYYY-MM-DD');
 
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+    const { bookingRules } = resolveSettings(tenant?.settings);
+
     const day = new Date(`${date}T00:00:00`);
+    // Enforce "max days ahead" booking rule.
+    const maxDate = new Date();
+    maxDate.setHours(0, 0, 0, 0);
+    maxDate.setDate(maxDate.getDate() + bookingRules.maxDaysAhead);
+    if (day > maxDate) return { date, slots: [] };
+
     const weekday = day.getDay();
     const hours = await this.prisma.businessHours.findFirst({ where: { tenantId, weekday } });
     if (!hours || hours.isClosed) return { date, slots: [] };
@@ -81,13 +91,16 @@ export class BookingService {
       where: { tenantId, serviceId, status: { not: 'cancelled' }, startsAt: { gte: dayStart, lte: dayEnd } },
     });
 
-    const step = service.durationMin + service.bufferBefore + service.bufferAfter;
+    // Slot interval: explicit override or auto (duration + buffers).
+    const step = bookingRules.slotIntervalMin > 0 ? bookingRules.slotIntervalMin : service.durationMin + service.bufferBefore + service.bufferAfter;
+    const earliest = new Date(Date.now() + bookingRules.leadTimeMinutes * 60000); // lead time
     const slots: Array<{ startsAt: string; endsAt: string; available: boolean }> = [];
     for (let m = hours.openMin; m + service.durationMin <= hours.closeMin; m += step) {
       const start = new Date(day.getTime() + m * 60000);
       const end = new Date(start.getTime() + service.durationMin * 60000);
       const overlapping = existing.filter((b) => b.startsAt < end && b.endsAt > start).length;
-      slots.push({ startsAt: start.toISOString(), endsAt: end.toISOString(), available: overlapping < service.capacity });
+      const available = overlapping < service.capacity && start >= earliest;
+      slots.push({ startsAt: start.toISOString(), endsAt: end.toISOString(), available });
     }
     return { date, slots };
   }
@@ -108,6 +121,16 @@ export class BookingService {
 
     const start = new Date(data.startsAt);
     const end = new Date(start.getTime() + service.durationMin * 60000);
+
+    // Enforce booking rules server-side (lead time + max days ahead).
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+    const { bookingRules } = resolveSettings(tenant?.settings);
+    if (start.getTime() < Date.now() + bookingRules.leadTimeMinutes * 60000) {
+      throw new BadRequestException('Dit tijdstip is te kort dag — kies een later moment.');
+    }
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + bookingRules.maxDaysAhead);
+    if (start > maxDate) throw new BadRequestException('Dit tijdstip ligt te ver in de toekomst.');
 
     const overlapping = await this.prisma.booking.count({
       where: { tenantId, serviceId: service.id, status: { not: 'cancelled' }, startsAt: { lt: end }, endsAt: { gt: start } },

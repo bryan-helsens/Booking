@@ -50,6 +50,15 @@
           <el-form-item label="Naam"><el-input v-model="form.customerName" /></el-form-item>
           <el-form-item label="E-mail"><el-input v-model="form.customerEmail" /></el-form-item>
           <el-form-item label="Opmerking"><el-input v-model="form.notes" type="textarea" /></el-form-item>
+          <!-- Tenant-defined custom fields -->
+          <el-form-item v-for="f in formFields" :key="f.key" :label="f.label + (f.required ? ' *' : '')">
+            <el-input v-if="f.type === 'text'" v-model="customAnswers[f.key]" />
+            <el-input v-else-if="f.type === 'textarea'" v-model="customAnswers[f.key]" type="textarea" />
+            <el-select v-else-if="f.type === 'select'" v-model="customAnswers[f.key]" style="width: 100%">
+              <el-option v-for="o in f.options || []" :key="o" :label="o" :value="o" />
+            </el-select>
+            <el-checkbox v-else-if="f.type === 'checkbox'" v-model="customAnswers[f.key]">Ja</el-checkbox>
+          </el-form-item>
           <el-form-item v-if="couponsEnabled" label="Kortingscode">
             <el-input v-model="couponCode" placeholder="bijv. WELKOM10">
               <template #append><el-button @click="applyCoupon">Toepassen</el-button></template>
@@ -114,9 +123,12 @@ const date = ref(new Date().toISOString().slice(0, 10));
 const form = ref({ serviceId: '', startsAt: '', customerName: '', customerEmail: '', notes: '' });
 const couponCode = ref('');
 const couponPct = ref(0);
+const customAnswers = ref<Record<string, any>>({});
 
 const couponsEnabled = computed(() => site.isEnabled('coupons'));
 const emailEnabled = computed(() => site.isEnabled('email'));
+const formFields = computed<any[]>(() => site.settings?.formFields || []);
+const maxDaysAhead = computed(() => Number(site.settings?.bookingRules?.maxDaysAhead) || 60);
 
 onMounted(async () => {
   const { data } = await api.get('/services?active=true');
@@ -131,7 +143,11 @@ const total = computed(() => (selectedService.value?.priceCents || 0) - discount
 const canNext = computed(() => {
   if (step.value === 0) return !!form.value.serviceId;
   if (step.value === 1) return !!form.value.startsAt;
-  if (step.value === 2) return !!form.value.customerName && /.+@.+/.test(form.value.customerEmail);
+  if (step.value === 2) {
+    const baseOk = !!form.value.customerName && /.+@.+/.test(form.value.customerEmail);
+    const customOk = formFields.value.every((f) => !f.required || !!customAnswers.value[f.key]);
+    return baseOk && customOk;
+  }
   return true;
 });
 
@@ -163,7 +179,13 @@ async function next() {
   if (step.value === 2) {
     submitting.value = true;
     try {
-      await api.post('/bookings', form.value);
+      // Fold custom field answers into the booking notes.
+      const extra = formFields.value
+        .map((f) => (customAnswers.value[f.key] != null && customAnswers.value[f.key] !== '' ? `${f.label}: ${customAnswers.value[f.key]}` : ''))
+        .filter(Boolean)
+        .join('\n');
+      const notes = [form.value.notes, extra].filter(Boolean).join('\n');
+      await api.post('/bookings', { ...form.value, notes });
       step.value = 3;
     } catch (e: any) {
       ElMessage.error(e?.response?.data?.message || 'Boeking mislukt');
@@ -182,9 +204,15 @@ function reset() {
   couponPct.value = 0;
 }
 
-const euro = (c: number) => `€ ${(c / 100).toFixed(2)}`;
+const euro = (c: number) => site.formatMoney(c);
 const time = (iso: string) => (iso ? new Date(iso).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' }) : '');
-const past = (d: Date) => d.getTime() < Date.now() - 86400000;
+// Disable past dates and dates beyond the tenant's "max days ahead" rule.
+const past = (d: Date) => {
+  const max = new Date();
+  max.setHours(0, 0, 0, 0);
+  max.setDate(max.getDate() + maxDaysAhead.value);
+  return d.getTime() < Date.now() - 86400000 || d.getTime() > max.getTime();
+};
 function thumb(s: Service) {
   return s.imageUrl ? { backgroundImage: `url(${s.imageUrl})` } : { background: 'linear-gradient(135deg, var(--app-color-primary), var(--app-color-accent))' };
 }

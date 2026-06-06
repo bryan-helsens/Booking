@@ -37,7 +37,7 @@ function goBook() {
 .hero { position: relative; color: #fff; min-height: 70vh; display: flex; align-items: center; overflow: hidden; padding: 64px 24px; }
 .bg-gradient { position: absolute; inset: 0; background: linear-gradient(135deg, var(--app-color-primary), var(--app-color-accent)); }
 .bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.55)); }
+.overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,calc(var(--app-hero-overlay, 0.45) * 0.5)), rgba(0,0,0,var(--app-hero-overlay, 0.45))); }
 .hero-inner { position: relative; z-index: 1; max-width: 760px; animation: rise 0.8s ease both; }
 .align-center { text-align: center; }
 .align-center .hero-inner { margin: 0 auto; }

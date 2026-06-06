@@ -17,6 +17,7 @@
         <el-menu-item index="bookings" :route="{ name: 'bookings' }"><el-icon><Tickets /></el-icon>Reserveringen</el-menu-item>
       </el-menu-item-group>
       <el-menu-item index="features" :route="{ name: 'features' }"><el-icon><Switch /></el-icon>Features</el-menu-item>
+      <el-menu-item index="settings" :route="{ name: 'settings' }"><el-icon><Setting /></el-icon>Instellingen</el-menu-item>
     </el-menu>
   </div>
 </template>

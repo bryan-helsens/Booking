@@ -63,6 +63,28 @@ export function applyTokens(tokens: ThemeTokens, mode: 'light' | 'dark') {
   set('--el-fill-color-extra-light', mix(bg, text, 0.02));
   set('--el-fill-color-blank', bg);
 
+  // ── Branding extras (optional token keys; safe defaults) ──
+  // Button shape: 'round' uses a pill radius, 'square' uses the base radius.
+  set('--app-button-radius', tokens.buttonStyle === 'square' ? `${tokens.radius}px` : '999px');
+  set('--el-border-radius-round', tokens.buttonStyle === 'square' ? `${tokens.radius}px` : '999px');
+  // Hero overlay strength (0–0.8).
+  set('--app-hero-overlay', String(typeof tokens.heroOverlay === 'number' ? tokens.heroOverlay : 0.45));
+  // Optional site-wide background image.
+  set('--app-bg-image', tokens.backgroundImage ? `url(${tokens.backgroundImage})` : 'none');
+
+  // Tenant-provided custom CSS (escaped into a dedicated <style> element).
+  let styleEl = document.getElementById('tenant-custom-css') as HTMLStyleElement | null;
+  if (tokens.customCss) {
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = 'tenant-custom-css';
+      document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = String(tokens.customCss);
+  } else if (styleEl) {
+    styleEl.textContent = '';
+  }
+
   // Keep semantic status colors (success/warning/danger) at EP defaults so
   // booking statuses stay meaningful; the `.dark` class supplies dark variants.
   root.classList.toggle('dark', mode === 'dark');

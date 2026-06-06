@@ -35,10 +35,12 @@
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from '@/api/client';
+import { useSiteStore } from '@/stores/site';
 import type { Service } from '@/types';
 
 const props = defineProps<{ block: Record<string, any> }>();
 const router = useRouter();
+const site = useSiteStore();
 const services = ref<Service[]>([]);
 
 onMounted(async () => {
@@ -46,7 +48,7 @@ onMounted(async () => {
   services.value = data;
 });
 
-const euro = (c: number) => `€ ${(c / 100).toFixed(2)}`;
+const euro = (c: number) => site.formatMoney(c);
 function book(serviceId: string) {
   router.push({ name: 'booking', query: { service: serviceId } });
 }

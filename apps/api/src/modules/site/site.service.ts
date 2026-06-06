@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TenantContext } from '../../common/tenant-context.service';
 import { parseJson, toJson } from '../../common/json';
+import { resolveSettings } from '../../common/settings';
 
 @Injectable()
 export class SiteService {
@@ -35,7 +36,26 @@ export class SiteService {
       theme: this.mapTheme(theme),
       content: this.mapContent(content),
       features: Object.fromEntries(flags.map((f) => [f.key, f.enabled])),
+      settings: resolveSettings(tenant.settings),
     };
+  }
+
+  // ── Settings (booking rules, regional, custom form fields) ──
+  async getSettings() {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: this.ctx.id } });
+    return resolveSettings(tenant?.settings);
+  }
+
+  async saveSettings(data: any) {
+    // Merge onto current resolved settings so partial updates are safe.
+    const current = await this.getSettings();
+    const next = {
+      bookingRules: { ...current.bookingRules, ...(data.bookingRules || {}) },
+      regional: { ...current.regional, ...(data.regional || {}) },
+      formFields: Array.isArray(data.formFields) ? data.formFields : current.formFields,
+    };
+    await this.prisma.tenant.update({ where: { id: this.ctx.id }, data: { settings: toJson(next) } });
+    return next;
   }
 
   // ── Theme ──

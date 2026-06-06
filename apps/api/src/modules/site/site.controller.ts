@@ -51,4 +51,14 @@ export class SiteController {
   saveFeatures(@Body() body: Record<string, boolean>) {
     return this.site.saveFeatures(body);
   }
+
+  @Get('settings')
+  getSettings() {
+    return this.site.getSettings();
+  }
+
+  @Put('settings')
+  saveSettings(@Body() body: any) {
+    return this.site.saveSettings(body);
+  }
 }

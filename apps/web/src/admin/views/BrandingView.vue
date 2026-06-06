@@ -65,6 +65,36 @@
       </el-col>
     </el-row>
 
+    <el-card header="Geavanceerd" style="margin-top: 16px">
+      <el-row :gutter="20">
+        <el-col :md="12">
+          <el-form label-width="160px">
+            <el-form-item label="Knopvorm">
+              <el-radio-group v-model="tokens.buttonStyle" @change="preview">
+                <el-radio-button value="round">Rond</el-radio-button>
+                <el-radio-button value="square">Hoekig</el-radio-button>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="Hero overlay">
+              <el-slider v-model="tokens.heroOverlay" :min="0" :max="0.8" :step="0.05" @input="preview" />
+            </el-form-item>
+          </el-form>
+        </el-col>
+        <el-col :md="12">
+          <el-form label-position="top">
+            <el-form-item label="Site-achtergrondafbeelding (optioneel)">
+              <ImageUploader v-model="tokens.backgroundImage" @update:modelValue="preview" />
+            </el-form-item>
+          </el-form>
+        </el-col>
+      </el-row>
+      <el-form label-position="top">
+        <el-form-item label="Eigen CSS (geavanceerd)">
+          <el-input v-model="tokens.customCss" type="textarea" :rows="4" placeholder=".sf-section { ... }" @input="preview" />
+        </el-form-item>
+      </el-form>
+    </el-card>
+
     <el-card header="Voorbeeld" style="margin-top: 16px">
       <div class="prev">
         <el-button type="primary">Primaire knop</el-button>
@@ -87,7 +117,13 @@ import { FONT_OPTIONS } from '@/theme/fonts';
 import ImageUploader from '@/components/ImageUploader.vue';
 
 const site = useSiteStore();
-const tokens = reactive({ ...(site.theme?.tokens as any) });
+const tokens = reactive<any>({
+  buttonStyle: 'round',
+  heroOverlay: 0.45,
+  backgroundImage: '',
+  customCss: '',
+  ...(site.theme?.tokens as any),
+});
 const mode = ref<'light' | 'dark'>(site.theme?.mode || 'light');
 const logoUrl = ref(site.content?.logoUrl || '');
 const faviconUrl = ref(site.content?.faviconUrl || '');

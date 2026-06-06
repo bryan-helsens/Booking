@@ -30,6 +30,7 @@ export const router = createRouter({
         { path: 'hours', name: 'hours', component: () => import('@/admin/views/HoursView.vue') },
         { path: 'bookings', name: 'bookings', component: () => import('@/admin/views/BookingsView.vue') },
         { path: 'features', name: 'features', component: () => import('@/admin/views/FeaturesView.vue') },
+        { path: 'settings', name: 'settings', component: () => import('@/admin/views/SettingsView.vue') },
       ],
     },
     { path: '/:pathMatch(.*)*', name: 'notfound', component: () => import('@/storefront/NotFound.vue') },

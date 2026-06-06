@@ -158,6 +158,7 @@ interface TenantSeed {
   features: Record<string, boolean>;
   reviews: { author: string; rating: number; quote: string }[];
   coupons: { code: string; percentOff: number }[];
+  settings?: any;
 }
 
 const TENANTS: TenantSeed[] = [
@@ -206,6 +207,11 @@ const TENANTS: TenantSeed[] = [
       { author: 'Iris Bakker', rating: 4, quote: 'Makkelijk online te boeken en een prachtige locatie.' },
     ],
     coupons: [{ code: 'WELKOM10', percentOff: 10 }],
+    settings: {
+      bookingRules: { maxDaysAhead: 45, leadTimeMinutes: 120, slotIntervalMin: 0, cancellationHours: 24 },
+      regional: { currency: 'EUR', locale: 'nl-NL', timezone: 'Europe/Amsterdam' },
+      formFields: [{ key: 'phone', label: 'Telefoonnummer', type: 'text', required: true }],
+    },
   },
   {
     slug: 'studio',
@@ -251,6 +257,11 @@ const TENANTS: TenantSeed[] = [
       { author: 'Younes B.', rating: 5, quote: 'Hot towel shave is een aanrader. Echte ervaring.' },
     ],
     coupons: [{ code: 'NOIR15', percentOff: 15 }],
+    settings: {
+      bookingRules: { maxDaysAhead: 30, leadTimeMinutes: 60, slotIntervalMin: 0, cancellationHours: 12 },
+      regional: { currency: 'EUR', locale: 'nl-NL', timezone: 'Europe/Amsterdam' },
+      formFields: [{ key: 'barber', label: 'Voorkeur barbier', type: 'select', required: false, options: ['Geen voorkeur', 'Sam', 'Younes'] }],
+    },
   },
 ];
 
@@ -264,10 +275,11 @@ function defaultBusinessHours(tenantId: string) {
 }
 
 async function seedTenant(t: TenantSeed) {
+  const settingsJson = J(t.settings || {});
   const tenant = await prisma.tenant.upsert({
     where: { slug: t.slug },
-    update: { name: t.name },
-    create: { slug: t.slug, name: t.name },
+    update: { name: t.name, settings: settingsJson },
+    create: { slug: t.slug, name: t.name, settings: settingsJson },
   });
 
   await prisma.domain.upsert({
