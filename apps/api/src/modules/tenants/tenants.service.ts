@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { toJson } from '../../common/json';
+import { hashPassword } from '../../common/password';
 
 /** Starter theme presets offered during onboarding. */
 const STARTER_THEMES: Record<string, { mode: 'light' | 'dark'; tokens: any }> = {
@@ -45,6 +46,7 @@ export class TenantsService {
 
     const slug = await this.uniqueSlug(companyName);
     const preset = STARTER_THEMES[input.theme || 'fresh'] || STARTER_THEMES.fresh;
+    const passwordHash = await hashPassword(input.password);
 
     const tenant = await this.prisma.tenant.create({ data: { slug, name: companyName } });
 
@@ -58,7 +60,7 @@ export class TenantsService {
 
     await this.prisma.$transaction([
       this.prisma.domain.create({ data: { host: `${slug}.localhost`, tenantId: tenant.id } }),
-      this.prisma.user.create({ data: { tenantId: tenant.id, email, password: input.password, name: 'Admin', role: 'owner' } }),
+      this.prisma.user.create({ data: { tenantId: tenant.id, email, password: passwordHash, name: 'Admin', role: 'owner' } }),
       this.prisma.themeConfig.create({ data: { tenantId: tenant.id, mode: preset.mode, tokens: toJson(preset.tokens) } }),
       this.prisma.siteContent.create({
         data: {

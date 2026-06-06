@@ -52,10 +52,19 @@ The frontend calls `${VITE_API_URL}/api/...`. The NestJS server enables CORS
 for all origins (demo). For a real deployment, restrict it to your Netlify
 origin in `apps/api/src/main.ts`.
 
+## Security configuration
+
+- **Passwords** are hashed with bcrypt (`bcryptjs`) on signup/seed and verified
+  on login — no plaintext is stored.
+- **CORS** is locked to `CORS_ORIGINS` (comma-separated) when set. `render.yaml`
+  sets it to the Netlify URL; update it if your frontend URL changes. Unset
+  (local dev) reflects any origin.
+- **Demo hints** (prefilled credentials + the demo-login banner) are hidden when
+  `VITE_DEMO_MODE="false"` — already set in `netlify.toml` for production.
+
 ## Going further (production hardening)
 
-- Hash passwords (bcrypt/argon2) and wire real OAuth callbacks.
-- Restrict CORS to the known frontend origin.
+- Wire real OAuth callbacks; add rate-limiting / captcha on public signup.
 - Replace `db push` + seed with versioned `prisma migrate deploy`.
 - Per-tenant custom domains via the `Domain` table + on-demand TLS.
 - Object storage (S3/R2) for media uploads; wire Stripe/Mollie + Twilio.

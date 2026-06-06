@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TenantContext } from '../../common/tenant-context.service';
+import { verifyPassword } from '../../common/password';
 
 @Injectable()
 export class AuthService {
@@ -14,8 +15,9 @@ export class AuthService {
   async login(email: string, password: string) {
     const tenantId = this.ctx.id;
     const user = await this.prisma.user.findFirst({ where: { tenantId, email } });
-    // Demo only — real impl compares a bcrypt/argon2 hash.
-    if (!user || user.password !== password) throw new UnauthorizedException('Invalid credentials');
+    if (!user || !(await verifyPassword(password, user.password))) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
     return this.issue(user);
   }
 

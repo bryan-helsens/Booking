@@ -7,6 +7,7 @@
  *   Tenant "studio" → "Studio Noir Barber" (dark, sharp, bold)
  */
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -275,10 +276,11 @@ async function seedTenant(t: TenantSeed) {
     create: { host: t.host, tenantId: tenant.id },
   });
 
+  const passwordHash = await bcrypt.hash('demo1234', 10);
   await prisma.user.upsert({
     where: { tenantId_email: { tenantId: tenant.id, email: `admin@${t.slug}.nl` } },
-    update: {},
-    create: { tenantId: tenant.id, email: `admin@${t.slug}.nl`, password: 'demo1234', name: 'Admin', role: 'owner' },
+    update: { password: passwordHash },
+    create: { tenantId: tenant.id, email: `admin@${t.slug}.nl`, password: passwordHash, name: 'Admin', role: 'owner' },
   });
 
   await prisma.themeConfig.upsert({

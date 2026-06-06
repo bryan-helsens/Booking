@@ -7,7 +7,12 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.setGlobalPrefix('api');
-  app.enableCors({ origin: true, credentials: true });
+  // Restrict CORS to configured origins in production; reflect any origin in dev.
+  const allowed = (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  app.enableCors({ origin: allowed.length ? allowed : true, credentials: true });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   // Serve uploaded media at /uploads (outside the /api prefix).
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads/' });

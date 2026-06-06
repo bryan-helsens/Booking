@@ -21,7 +21,7 @@
       <el-divider>of</el-divider>
       <el-button style="width: 100%" @click="oauth('google')">Inloggen met Google (OAuth)</el-button>
       <p class="signup">Nog geen site? <router-link to="/get-started">Maak je eigen boekingssite →</router-link></p>
-      <el-alert class="hint" type="info" :closable="false" show-icon
+      <el-alert v-if="demoMode" class="hint" type="info" :closable="false" show-icon
         title="Demo login" description="admin@acme.nl / admin@studio.nl — wachtwoord: demo1234" />
     </el-card>
   </div>
@@ -37,9 +37,11 @@ import { useAuthStore } from '@/stores/auth';
 const auth = useAuthStore();
 const router = useRouter();
 const route = useRoute();
+// Demo conveniences (prefilled creds + hint) are hidden in production.
+const demoMode = import.meta.env.VITE_DEMO_MODE !== 'false';
 const tenant = ref(getTenant());
-const email = ref('admin@acme.nl');
-const password = ref('demo1234');
+const email = ref(demoMode ? 'admin@acme.nl' : '');
+const password = ref(demoMode ? 'demo1234' : '');
 const loading = ref(false);
 const tenants = ref<Array<{ slug: string; name: string }>>([]);
 
@@ -51,7 +53,7 @@ onMounted(async () => {
 function onTenant(slug: string) {
   setTenant(slug);
   // Demo convenience: prefill the seeded admin email for demo tenants.
-  if (slug === 'acme' || slug === 'studio') email.value = `admin@${slug}.nl`;
+  if (demoMode && (slug === 'acme' || slug === 'studio')) email.value = `admin@${slug}.nl`;
 }
 
 async function submit() {

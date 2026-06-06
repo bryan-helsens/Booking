@@ -33,3 +33,6 @@ services:
         generateValue: true
       - key: NODE_VERSION
         value: "20"
+      # Lock CORS to the Netlify frontend. Update if your frontend URL changes.
+      - key: CORS_ORIGINS
+        value: "https://dynamic-jalebi-68b855.netlify.app"
