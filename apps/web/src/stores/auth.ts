@@ -22,6 +22,13 @@ export const useAuthStore = defineStore('auth', () => {
     return data;
   }
 
+  /** Apply a session from an onboarding/signup response. */
+  function applySession(newToken: string, newUser: any) {
+    token.value = newToken;
+    user.value = newUser;
+    setToken(newToken);
+  }
+
   function logout() {
     user.value = null;
     token.value = null;
@@ -30,5 +37,5 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = () => !!token.value;
 
-  return { user, token, login, oauth, logout, isAuthenticated };
+  return { user, token, login, oauth, applySession, logout, isAuthenticated };
 });

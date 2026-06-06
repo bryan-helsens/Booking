@@ -1,25 +1,37 @@
 <template>
   <div class="switcher">
     <el-tooltip content="Demo: wissel van tenant om white-label theming te zien" placement="left">
-      <el-select :model-value="current" size="small" style="width: 200px" @change="onChange">
-        <el-option label="Acme Wellness Spa" value="acme" />
-        <el-option label="Studio Noir Barber" value="studio" />
+      <el-select :model-value="current" size="small" style="width: 210px" @change="onChange">
+        <el-option v-for="t in tenants" :key="t.slug" :label="t.name" :value="t.slug" />
+        <el-option value="__new__" label="➕ Nieuwe site aanmaken" />
       </el-select>
     </el-tooltip>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { api } from '@/api/client';
 import { useSiteStore } from '@/stores/site';
 
 const site = useSiteStore();
+const router = useRouter();
 const current = ref(site.currentTenant());
+const tenants = ref<Array<{ slug: string; name: string }>>([]);
+
+onMounted(async () => {
+  const { data } = await api.get('/tenants');
+  tenants.value = data;
+});
 
 async function onChange(slug: string) {
+  if (slug === '__new__') {
+    router.push('/get-started');
+    return;
+  }
   current.value = slug;
   await site.switchTenant(slug);
-  // Reload so storefront pages re-fetch the new tenant's config.
   window.location.reload();
 }
 </script>

@@ -16,6 +16,7 @@ export const router = createRouter({
     },
     // ── Admin dashboard ──
     { path: '/login', name: 'login', component: () => import('@/admin/LoginView.vue') },
+    { path: '/get-started', name: 'onboarding', component: () => import('@/admin/OnboardingView.vue') },
     {
       path: '/admin',
       component: () => import('@/admin/AdminLayout.vue'),

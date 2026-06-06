@@ -4,9 +4,8 @@
       <h1>Admin login</h1>
       <p class="sub">Beheer je booking-website</p>
 
-      <el-select v-model="tenant" style="width: 100%; margin-bottom: 16px" @change="onTenant">
-        <el-option label="Acme Wellness Spa" value="acme" />
-        <el-option label="Studio Noir Barber" value="studio" />
+      <el-select v-model="tenant" style="width: 100%; margin-bottom: 16px" @change="onTenant" placeholder="Kies je bedrijf">
+        <el-option v-for="t in tenants" :key="t.slug" :label="t.name" :value="t.slug" />
       </el-select>
 
       <el-form @submit.prevent="submit">
@@ -21,6 +20,7 @@
 
       <el-divider>of</el-divider>
       <el-button style="width: 100%" @click="oauth('google')">Inloggen met Google (OAuth)</el-button>
+      <p class="signup">Nog geen site? <router-link to="/get-started">Maak je eigen boekingssite →</router-link></p>
       <el-alert class="hint" type="info" :closable="false" show-icon
         title="Demo login" description="admin@acme.nl / admin@studio.nl — wachtwoord: demo1234" />
     </el-card>
@@ -28,11 +28,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import { api, setTenant, getTenant } from '@/api/client';
 import { useAuthStore } from '@/stores/auth';
-import { setTenant, getTenant } from '@/api/client';
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -41,10 +41,17 @@ const tenant = ref(getTenant());
 const email = ref('admin@acme.nl');
 const password = ref('demo1234');
 const loading = ref(false);
+const tenants = ref<Array<{ slug: string; name: string }>>([]);
+
+onMounted(async () => {
+  const { data } = await api.get('/tenants');
+  tenants.value = data;
+});
 
 function onTenant(slug: string) {
   setTenant(slug);
-  email.value = `admin@${slug}.nl`;
+  // Demo convenience: prefill the seeded admin email for demo tenants.
+  if (slug === 'acme' || slug === 'studio') email.value = `admin@${slug}.nl`;
 }
 
 async function submit() {
@@ -75,4 +82,6 @@ async function oauth(provider: string) {
 h1 { margin: 0; }
 .sub { color: var(--el-text-color-secondary); margin: 4px 0 20px; }
 .hint { margin-top: 16px; }
+.signup { text-align: center; margin: 14px 0 0; color: var(--el-text-color-secondary); }
+.signup a { color: var(--el-color-primary); text-decoration: none; }
 </style>
