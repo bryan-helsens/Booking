@@ -1,41 +1,34 @@
 <template>
-  <el-container class="admin" :class="{ dark: isDark }">
-    <el-aside width="230px" class="aside">
-      <div class="logo">
-        <el-icon size="22"><Calendar /></el-icon>
-        <span>Booking Admin</span>
-      </div>
-      <el-menu :default-active="route.name as string" router :collapse="false" class="menu">
-        <el-menu-item index="dashboard" :route="{ name: 'dashboard' }"><el-icon><Odometer /></el-icon>Dashboard</el-menu-item>
-        <el-menu-item-group title="Vormgeving">
-          <el-menu-item index="branding" :route="{ name: 'branding' }"><el-icon><Brush /></el-icon>Branding & Thema</el-menu-item>
-          <el-menu-item index="builder" :route="{ name: 'builder' }"><el-icon><Grid /></el-icon>Page Builder</el-menu-item>
-          <el-menu-item index="content" :route="{ name: 'content' }"><el-icon><Document /></el-icon>Content & SEO</el-menu-item>
-        </el-menu-item-group>
-        <el-menu-item-group title="Boekingen">
-          <el-menu-item index="services" :route="{ name: 'services' }"><el-icon><List /></el-icon>Diensten</el-menu-item>
-          <el-menu-item index="hours" :route="{ name: 'hours' }"><el-icon><Clock /></el-icon>Openingstijden</el-menu-item>
-          <el-menu-item index="bookings" :route="{ name: 'bookings' }"><el-icon><Tickets /></el-icon>Reserveringen</el-menu-item>
-        </el-menu-item-group>
-        <el-menu-item index="features" :route="{ name: 'features' }"><el-icon><Switch /></el-icon>Features</el-menu-item>
-      </el-menu>
+  <el-container class="admin">
+    <!-- Desktop: persistent sidebar -->
+    <el-aside v-if="!isMobile" width="230px" class="aside">
+      <AdminMenu />
     </el-aside>
+
+    <!-- Mobile: off-canvas drawer -->
+    <el-drawer v-else v-model="menuOpen" direction="ltr" size="240px" :with-header="false">
+      <AdminMenu @navigate="menuOpen = false" />
+    </el-drawer>
 
     <el-container>
       <el-header class="header">
         <div class="left">
-          <strong>{{ site.content?.companyName || 'Laden...' }}</strong>
+          <el-button v-if="isMobile" text :icon="Menu" class="burger" @click="menuOpen = true" />
+          <strong class="company">{{ site.content?.companyName || 'Laden...' }}</strong>
           <el-tag size="small" round>{{ site.currentTenant() }}</el-tag>
         </div>
         <div class="right">
           <el-button text @click="toggleMode">
             <el-icon><component :is="isDark ? 'Sunny' : 'Moon'" /></el-icon>
           </el-button>
-          <el-button text tag="a" href="/" target="_blank">Bekijk site <el-icon class="el-icon--right"><TopRight /></el-icon></el-button>
+          <el-button text tag="a" href="/" target="_blank" class="view-site">
+            Bekijk site <el-icon class="el-icon--right"><TopRight /></el-icon>
+          </el-button>
           <el-dropdown @command="onCommand">
-            <span class="user">{{ auth.user?.name || 'Admin' }} <el-icon><ArrowDown /></el-icon></span>
+            <span class="user">{{ userInitial }} <el-icon><ArrowDown /></el-icon></span>
             <template #dropdown>
               <el-dropdown-menu>
+                <el-dropdown-item command="site">Bekijk site</el-dropdown-item>
                 <el-dropdown-item command="logout">Uitloggen</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -51,23 +44,37 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { Menu } from '@element-plus/icons-vue';
 import { useSiteStore } from '@/stores/site';
 import { useAuthStore } from '@/stores/auth';
+import AdminMenu from './AdminMenu.vue';
 
 const route = useRoute();
 const router = useRouter();
 const site = useSiteStore();
 const auth = useAuthStore();
 const isDark = ref(false);
+const isMobile = ref(false);
+const menuOpen = ref(false);
+
+const userInitial = computed(() => auth.user?.name || 'Admin');
+
+function onResize() {
+  isMobile.value = window.innerWidth < 768;
+}
 
 onMounted(async () => {
+  onResize();
+  window.addEventListener('resize', onResize);
   if (!site.loaded) await site.bootstrap();
   isDark.value = site.theme?.mode === 'dark';
 });
+onUnmounted(() => window.removeEventListener('resize', onResize));
 
-const _ = computed(() => site.theme?.mode);
+// Close the mobile menu on navigation.
+watch(() => route.name, () => (menuOpen.value = false));
 
 function toggleMode() {
   isDark.value = !isDark.value;
@@ -79,18 +86,22 @@ function onCommand(cmd: string) {
   if (cmd === 'logout') {
     auth.logout();
     router.push({ name: 'login' });
+  } else if (cmd === 'site') {
+    window.open('/', '_blank');
   }
 }
 </script>
 
 <style scoped>
 .admin { height: 100vh; }
-.aside { background: var(--el-bg-color); border-right: 1px solid var(--el-border-color-light); }
-.logo { display: flex; align-items: center; gap: 8px; font-weight: 700; padding: 18px 20px; font-size: 1.05rem; }
-.menu { border-right: none; }
-.header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--el-border-color-light); }
-.left { display: flex; align-items: center; gap: 10px; }
-.right { display: flex; align-items: center; gap: 8px; }
+.aside { border-right: 1px solid var(--el-border-color-light); }
+.header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--el-border-color-light); padding: 0 12px; }
+.left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.company { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 45vw; }
+.right { display: flex; align-items: center; gap: 4px; }
 .user { cursor: pointer; display: flex; align-items: center; gap: 4px; }
-.main { background: var(--el-fill-color-light); }
+.main { background: var(--el-fill-color-light); padding: 16px; }
+@media (max-width: 768px) {
+  .view-site { display: none; }
+}
 </style>

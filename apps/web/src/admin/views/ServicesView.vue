@@ -26,7 +26,7 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="dialog" :title="form.id ? 'Dienst bewerken' : 'Nieuwe dienst'" width="520px">
+    <el-dialog v-model="dialog" :title="form.id ? 'Dienst bewerken' : 'Nieuwe dienst'" width="min(520px, 94vw)">
       <el-form label-position="top">
         <el-form-item label="Naam"><el-input v-model="form.name" /></el-form-item>
         <el-form-item label="Beschrijving"><el-input v-model="form.description" type="textarea" /></el-form-item>

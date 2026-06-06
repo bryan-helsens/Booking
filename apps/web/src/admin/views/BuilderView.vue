@@ -21,7 +21,7 @@
 
     <el-row :gutter="16" class="grid">
       <!-- Left: palette + section list -->
-      <el-col :span="7">
+      <el-col :xs="24" :md="7">
         <el-card header="Sleep een component naar rechts →" class="panel">
           <draggable
             :list="builder.components"
@@ -58,7 +58,7 @@
       </el-col>
 
       <!-- Center: live preview -->
-      <el-col :span="11">
+      <el-col :xs="24" :md="11">
         <el-card class="panel preview-card" body-style="padding:0">
           <template #header>
             <div class="preview-bar">
@@ -79,7 +79,7 @@
       </el-col>
 
       <!-- Right: prop editor (generated from the component's schema) -->
-      <el-col :span="6">
+      <el-col :xs="24" :md="6">
         <el-card header="Instellingen" class="panel">
           <div v-if="selected">
             <el-tag round style="margin-bottom: 14px">{{ label(selected.type) }}</el-tag>
@@ -141,6 +141,10 @@ async function publish() {
 
 <style scoped>
 .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+@media (max-width: 768px) {
+  .grid .el-col { margin-bottom: 16px; }
+  .preview-stage { height: 60vh; }
+}
 .title-row { display: flex; align-items: center; gap: 10px; }
 .actions { display: flex; gap: 8px; }
 .grid { align-items: flex-start; }
