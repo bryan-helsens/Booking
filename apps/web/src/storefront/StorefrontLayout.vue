@@ -66,6 +66,8 @@
 import { computed, onMounted, ref } from 'vue';
 import { Menu } from '@element-plus/icons-vue';
 import { useSiteStore } from '@/stores/site';
+import { api } from '@/api/client';
+import { injectStructuredData } from '@/theme/seo';
 import TenantSwitcher from '@/components/TenantSwitcher.vue';
 
 const site = useSiteStore();
@@ -78,8 +80,25 @@ const hasSocial = computed(() => {
   return !!(s && (s.facebook || s.instagram || s.x || s.linkedin));
 });
 
-onMounted(() => {
-  if (!site.loaded) site.bootstrap();
+onMounted(async () => {
+  if (!site.loaded) await site.bootstrap();
+  // Inject SEO structured data once the tenant config is known.
+  try {
+    const [sv, rv, hr] = await Promise.all([
+      api.get('/services?active=true'),
+      api.get('/reviews'),
+      api.get('/business-hours'),
+    ]);
+    injectStructuredData({
+      content: site.content,
+      services: sv.data,
+      reviews: rv.data,
+      hours: hr.data,
+      currency: site.settings?.regional?.currency || 'EUR',
+    });
+  } catch {
+    /* SEO is best-effort */
+  }
 });
 </script>
 

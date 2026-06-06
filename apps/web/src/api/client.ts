@@ -3,6 +3,15 @@ import axios from 'axios';
 const TENANT_KEY = 'booking.tenant';
 const TOKEN_KEY = 'booking.token';
 
+// Allow a tenant to be forced via URL (?tenant=slug) — used by the embeddable
+// widget and shareable booking links on third-party sites.
+try {
+  const fromUrl = new URLSearchParams(window.location.search).get('tenant');
+  if (fromUrl) localStorage.setItem(TENANT_KEY, fromUrl);
+} catch {
+  /* ignore */
+}
+
 export function getTenant(): string {
   return localStorage.getItem(TENANT_KEY) || 'acme';
 }

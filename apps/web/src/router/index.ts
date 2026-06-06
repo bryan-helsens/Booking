@@ -18,12 +18,15 @@ export const router = createRouter({
     // ── Admin dashboard ──
     { path: '/login', name: 'login', component: () => import('@/admin/LoginView.vue') },
     { path: '/get-started', name: 'onboarding', component: () => import('@/admin/OnboardingView.vue') },
+    // Bare booking widget for embedding on third-party sites (?tenant=slug).
+    { path: '/embed', name: 'embed', component: () => import('@/storefront/EmbedView.vue') },
     {
       path: '/admin',
       component: () => import('@/admin/AdminLayout.vue'),
       meta: { requiresAuth: true },
       children: [
         { path: '', name: 'dashboard', component: () => import('@/admin/views/DashboardView.vue') },
+        { path: 'analytics', name: 'analytics', component: () => import('@/admin/views/AnalyticsView.vue') },
         { path: 'branding', name: 'branding', component: () => import('@/admin/views/BrandingView.vue') },
         { path: 'content', name: 'content', component: () => import('@/admin/views/ContentView.vue') },
         { path: 'builder', name: 'builder', component: () => import('@/admin/views/BuilderView.vue') },
@@ -32,6 +35,7 @@ export const router = createRouter({
         { path: 'hours', name: 'hours', component: () => import('@/admin/views/HoursView.vue') },
         { path: 'bookings', name: 'bookings', component: () => import('@/admin/views/BookingsView.vue') },
         { path: 'features', name: 'features', component: () => import('@/admin/views/FeaturesView.vue') },
+        { path: 'embed', name: 'embed-admin', component: () => import('@/admin/views/EmbedView.vue') },
         { path: 'settings', name: 'settings', component: () => import('@/admin/views/SettingsView.vue') },
       ],
     },

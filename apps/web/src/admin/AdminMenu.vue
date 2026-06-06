@@ -6,6 +6,7 @@
     </div>
     <el-menu :default-active="route.name as string" router class="menu" @select="$emit('navigate')">
       <el-menu-item index="dashboard" :route="{ name: 'dashboard' }"><el-icon><Odometer /></el-icon>Dashboard</el-menu-item>
+      <el-menu-item index="analytics" :route="{ name: 'analytics' }"><el-icon><TrendCharts /></el-icon>Statistieken</el-menu-item>
       <el-menu-item-group title="Vormgeving">
         <el-menu-item index="branding" :route="{ name: 'branding' }"><el-icon><Brush /></el-icon>Branding & Thema</el-menu-item>
         <el-menu-item index="builder" :route="{ name: 'builder' }"><el-icon><Grid /></el-icon>Page Builder</el-menu-item>
@@ -18,6 +19,7 @@
         <el-menu-item index="bookings" :route="{ name: 'bookings' }"><el-icon><Tickets /></el-icon>Reserveringen</el-menu-item>
       </el-menu-item-group>
       <el-menu-item index="features" :route="{ name: 'features' }"><el-icon><Switch /></el-icon>Features</el-menu-item>
+      <el-menu-item index="embed-admin" :route="{ name: 'embed-admin' }"><el-icon><Connection /></el-icon>Insluiten</el-menu-item>
       <el-menu-item index="settings" :route="{ name: 'settings' }"><el-icon><Setting /></el-icon>Instellingen</el-menu-item>
     </el-menu>
   </div>

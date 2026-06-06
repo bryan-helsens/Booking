@@ -254,6 +254,50 @@ export class BookingService {
     return this.prisma.booking.update({ where: { id }, data: { status } });
   }
 
+  // ── Analytics ──
+  async analytics() {
+    const tenantId = this.ctx.id;
+    const bookings = await this.prisma.booking.findMany({
+      where: { tenantId },
+      include: { service: { select: { name: true, priceCents: true } }, staff: { select: { name: true } } },
+    });
+    const now = Date.now();
+    const active = bookings.filter((b) => b.status !== 'cancelled');
+    const revenueCents = active.reduce((sum, b) => sum + (b.service?.priceCents || 0), 0);
+
+    const tally = (key: (b: (typeof bookings)[number]) => string) => {
+      const m: Record<string, number> = {};
+      for (const b of active) {
+        const k = key(b);
+        if (k) m[k] = (m[k] || 0) + 1;
+      }
+      return Object.entries(m).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+    };
+
+    // Bookings per day for the last 14 days (by appointment date).
+    const days: Array<{ date: string; count: number }> = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const count = active.filter((b) => b.startsAt.toISOString().slice(0, 10) === key).length;
+      days.push({ date: key, count });
+    }
+
+    return {
+      totalBookings: bookings.length,
+      activeBookings: active.length,
+      upcoming: active.filter((b) => b.startsAt.getTime() > now).length,
+      cancelled: bookings.length - active.length,
+      cancelRate: bookings.length ? Math.round(((bookings.length - active.length) / bookings.length) * 100) : 0,
+      revenueCents,
+      perService: tally((b) => b.service?.name || '—'),
+      perStaff: tally((b) => b.staff?.name || ''),
+      last14Days: days,
+    };
+  }
+
   // ── Customer self-service (look up + cancel own booking) ──
   async findForCustomer(id: string, email: string) {
     const b = await this.prisma.booking.findFirst({

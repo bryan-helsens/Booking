@@ -77,6 +77,11 @@ export class BookingController {
     return this.booking.listBookings();
   }
 
+  @Get('analytics')
+  analytics() {
+    return this.booking.analytics();
+  }
+
   @Post('bookings')
   createBooking(@Body() body: any) {
     return this.booking.createBooking(body);
