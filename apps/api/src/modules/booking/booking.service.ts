@@ -44,6 +44,61 @@ export class BookingService {
     if (!s) throw new NotFoundException('Service not found');
   }
 
+  // ── Staff ──
+  listStaff(activeOnly = false) {
+    return this.prisma.staffMember.findMany({
+      where: { tenantId: this.ctx.id, ...(activeOnly ? { isActive: true } : {}) },
+      include: { services: { select: { id: true } } },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  /** Active staff that can perform a given service (for the booking picker). */
+  async staffForService(serviceId: string) {
+    const service = await this.prisma.service.findFirst({
+      where: { id: serviceId, tenantId: this.ctx.id },
+      include: { staff: { where: { isActive: true }, orderBy: { name: 'asc' } } },
+    });
+    return service?.staff ?? [];
+  }
+
+  createStaff(data: any) {
+    return this.prisma.staffMember.create({
+      data: {
+        tenantId: this.ctx.id,
+        name: data.name,
+        title: data.title || '',
+        imageUrl: data.imageUrl || '',
+        isActive: data.isActive ?? true,
+        services: { connect: (data.serviceIds || []).map((id: string) => ({ id })) },
+      },
+    });
+  }
+
+  async updateStaff(id: string, data: any) {
+    await this.assertStaffOwned(id);
+    return this.prisma.staffMember.update({
+      where: { id },
+      data: {
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.title !== undefined ? { title: data.title } : {}),
+        ...(data.imageUrl !== undefined ? { imageUrl: data.imageUrl } : {}),
+        ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
+        ...(data.serviceIds ? { services: { set: data.serviceIds.map((sid: string) => ({ id: sid })) } } : {}),
+      },
+    });
+  }
+
+  async deleteStaff(id: string) {
+    await this.assertStaffOwned(id);
+    return this.prisma.staffMember.delete({ where: { id } });
+  }
+
+  private async assertStaffOwned(id: string) {
+    const s = await this.prisma.staffMember.findFirst({ where: { id, tenantId: this.ctx.id } });
+    if (!s) throw new NotFoundException('Staff member not found');
+  }
+
   // ── Business hours ──
   listHours() {
     return this.prisma.businessHours.findMany({ where: { tenantId: this.ctx.id }, orderBy: { weekday: 'asc' } });
@@ -65,9 +120,12 @@ export class BookingService {
 
   // ── Availability ──
   /** Generate bookable slots for a service on a given date (YYYY-MM-DD). */
-  async availability(serviceId: string, date: string) {
+  async availability(serviceId: string, date: string, staffId?: string) {
     const tenantId = this.ctx.id;
-    const service = await this.prisma.service.findFirst({ where: { id: serviceId, tenantId } });
+    const service = await this.prisma.service.findFirst({
+      where: { id: serviceId, tenantId },
+      include: { staff: { where: { isActive: true }, select: { id: true } } },
+    });
     if (!service) throw new NotFoundException('Service not found');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new BadRequestException('date must be YYYY-MM-DD');
 
@@ -94,16 +152,28 @@ export class BookingService {
       where: { tenantId, serviceId, status: { not: 'cancelled' }, startsAt: { gte: dayStart, lte: dayEnd } },
     });
 
-    // Slot interval: explicit override or auto (duration + buffers).
+    // Staff dimension: candidate staff = a specific one, or all active staff
+    // for the service. If the service has no staff, fall back to capacity.
+    const allStaff = service.staff.map((s) => s.id);
+    const candidates = staffId ? allStaff.filter((id) => id === staffId) : allStaff;
+    const useStaff = candidates.length > 0;
+
     const step = bookingRules.slotIntervalMin > 0 ? bookingRules.slotIntervalMin : service.durationMin + service.bufferBefore + service.bufferAfter;
     const earliest = new Date(Date.now() + bookingRules.leadTimeMinutes * 60000); // lead time
     const slots: Array<{ startsAt: string; endsAt: string; available: boolean }> = [];
     for (let m = hours.openMin; m + service.durationMin <= hours.closeMin; m += step) {
       const start = new Date(day.getTime() + m * 60000);
       const end = new Date(start.getTime() + service.durationMin * 60000);
-      const overlapping = existing.filter((b) => b.startsAt < end && b.endsAt > start).length;
-      const available = overlapping < service.capacity && start >= earliest;
-      slots.push({ startsAt: start.toISOString(), endsAt: end.toISOString(), available });
+      const overlap = existing.filter((b) => b.startsAt < end && b.endsAt > start);
+      let available: boolean;
+      if (useStaff) {
+        // Free if at least one candidate staff member has no overlapping booking.
+        const busy = new Set(overlap.map((b) => b.staffId).filter(Boolean) as string[]);
+        available = candidates.some((id) => !busy.has(id));
+      } else {
+        available = overlap.length < service.capacity;
+      }
+      slots.push({ startsAt: start.toISOString(), endsAt: end.toISOString(), available: available && start >= earliest });
     }
     return { date, slots };
   }
@@ -112,14 +182,17 @@ export class BookingService {
   listBookings() {
     return this.prisma.booking.findMany({
       where: { tenantId: this.ctx.id },
-      include: { service: { select: { name: true } } },
+      include: { service: { select: { name: true } }, staff: { select: { name: true } } },
       orderBy: { startsAt: 'desc' },
     });
   }
 
-  async createBooking(data: { serviceId: string; customerName: string; customerEmail: string; startsAt: string; notes?: string }) {
+  async createBooking(data: { serviceId: string; customerName: string; customerEmail: string; startsAt: string; notes?: string; staffId?: string }) {
     const tenantId = this.ctx.id;
-    const service = await this.prisma.service.findFirst({ where: { id: data.serviceId, tenantId } });
+    const service = await this.prisma.service.findFirst({
+      where: { id: data.serviceId, tenantId },
+      include: { staff: { where: { isActive: true }, select: { id: true } } },
+    });
     if (!service) throw new NotFoundException('Service not found');
 
     const start = new Date(data.startsAt);
@@ -138,15 +211,33 @@ export class BookingService {
     maxDate.setDate(maxDate.getDate() + bookingRules.maxDaysAhead);
     if (start > maxDate) throw new BadRequestException('Dit tijdstip ligt te ver in de toekomst.');
 
-    const overlapping = await this.prisma.booking.count({
+    const overlap = await this.prisma.booking.findMany({
       where: { tenantId, serviceId: service.id, status: { not: 'cancelled' }, startsAt: { lt: end }, endsAt: { gt: start } },
     });
-    if (overlapping >= service.capacity) throw new BadRequestException('Slot no longer available');
+
+    // Resolve which staff member handles this booking.
+    const staffIds = service.staff.map((s) => s.id);
+    let assignedStaffId: string | null = null;
+    if (staffIds.length) {
+      const busy = new Set(overlap.map((b) => b.staffId).filter(Boolean) as string[]);
+      if (data.staffId) {
+        if (!staffIds.includes(data.staffId)) throw new BadRequestException('Deze medewerker doet deze dienst niet.');
+        if (busy.has(data.staffId)) throw new BadRequestException('Deze medewerker is niet meer beschikbaar.');
+        assignedStaffId = data.staffId;
+      } else {
+        // Round-robin-ish: pick the first free qualified staff member.
+        assignedStaffId = staffIds.find((id) => !busy.has(id)) ?? null;
+        if (!assignedStaffId) throw new BadRequestException('Slot no longer available');
+      }
+    } else if (overlap.length >= service.capacity) {
+      throw new BadRequestException('Slot no longer available');
+    }
 
     return this.prisma.booking.create({
       data: {
         tenantId,
         serviceId: service.id,
+        staffId: assignedStaffId,
         customerName: data.customerName,
         customerEmail: data.customerEmail,
         startsAt: start,

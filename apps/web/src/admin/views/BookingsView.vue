@@ -4,6 +4,7 @@
     <el-table :data="bookings" stripe>
       <el-table-column label="Klant"><template #default="{ row }">{{ row.customerName }}<br /><small>{{ row.customerEmail }}</small></template></el-table-column>
       <el-table-column label="Dienst"><template #default="{ row }">{{ row.service?.name }}</template></el-table-column>
+      <el-table-column label="Medewerker"><template #default="{ row }">{{ row.staff?.name || '—' }}</template></el-table-column>
       <el-table-column label="Wanneer"><template #default="{ row }">{{ dt(row.startsAt) }}</template></el-table-column>
       <el-table-column label="Status" width="140">
         <template #default="{ row }">

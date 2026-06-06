@@ -16,6 +16,7 @@ const TENANT_MODELS = new Set([
   'Booking',
   'Review',
   'Coupon',
+  'StaffMember',
 ]);
 const READ_ACTIONS = new Set(['findFirst', 'findMany', 'count', 'aggregate']);
 

@@ -13,6 +13,7 @@
       </el-menu-item-group>
       <el-menu-item-group title="Boekingen">
         <el-menu-item index="services" :route="{ name: 'services' }"><el-icon><List /></el-icon>Diensten</el-menu-item>
+        <el-menu-item index="staff" :route="{ name: 'staff' }"><el-icon><Avatar /></el-icon>Personeel</el-menu-item>
         <el-menu-item index="hours" :route="{ name: 'hours' }"><el-icon><Clock /></el-icon>Openingstijden</el-menu-item>
         <el-menu-item index="bookings" :route="{ name: 'bookings' }"><el-icon><Tickets /></el-icon>Reserveringen</el-menu-item>
       </el-menu-item-group>

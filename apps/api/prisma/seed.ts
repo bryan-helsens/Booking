@@ -159,6 +159,7 @@ interface TenantSeed {
   reviews: { author: string; rating: number; quote: string }[];
   coupons: { code: string; percentOff: number }[];
   settings?: any;
+  staff?: { name: string; title?: string }[];
 }
 
 const TENANTS: TenantSeed[] = [
@@ -216,6 +217,10 @@ const TENANTS: TenantSeed[] = [
         { from: '2026-12-25', to: '2026-12-26', label: 'Kerst' },
       ],
     },
+    staff: [
+      { name: 'Eva Smit', title: 'Massagetherapeut' },
+      { name: 'Noor de Wit', title: 'Schoonheidsspecialist' },
+    ],
   },
   {
     slug: 'studio',
@@ -264,8 +269,12 @@ const TENANTS: TenantSeed[] = [
     settings: {
       bookingRules: { maxDaysAhead: 30, leadTimeMinutes: 60, slotIntervalMin: 0, cancellationHours: 12 },
       regional: { currency: 'EUR', locale: 'nl-NL', timezone: 'Europe/Amsterdam' },
-      formFields: [{ key: 'barber', label: 'Voorkeur barbier', type: 'select', required: false, options: ['Geen voorkeur', 'Sam', 'Younes'] }],
+      formFields: [],
     },
+    staff: [
+      { name: 'Sam', title: 'Master Barber' },
+      { name: 'Younes', title: 'Barber' },
+    ],
   },
 ];
 
@@ -336,9 +345,26 @@ async function seedTenant(t: TenantSeed) {
   }
 
   // Reset & recreate services + hours for idempotent seeding.
+  await prisma.booking.deleteMany({ where: { tenantId: tenant.id } });
+  await prisma.staffMember.deleteMany({ where: { tenantId: tenant.id } });
   await prisma.service.deleteMany({ where: { tenantId: tenant.id } });
+  const serviceIds: string[] = [];
   for (const s of t.services) {
-    await prisma.service.create({ data: { tenantId: tenant.id, ...s } });
+    const created = await prisma.service.create({ data: { tenantId: tenant.id, ...s } });
+    serviceIds.push(created.id);
+  }
+
+  // Staff — connected to all of this tenant's services (demo).
+  for (const st of t.staff || []) {
+    await prisma.staffMember.create({
+      data: {
+        tenantId: tenant.id,
+        name: st.name,
+        title: st.title || '',
+        imageUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(st.name)}`,
+        services: { connect: serviceIds.map((id) => ({ id })) },
+      },
+    });
   }
 
   await prisma.businessHours.deleteMany({ where: { tenantId: tenant.id } });

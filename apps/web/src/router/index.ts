@@ -28,6 +28,7 @@ export const router = createRouter({
         { path: 'content', name: 'content', component: () => import('@/admin/views/ContentView.vue') },
         { path: 'builder', name: 'builder', component: () => import('@/admin/views/BuilderView.vue') },
         { path: 'services', name: 'services', component: () => import('@/admin/views/ServicesView.vue') },
+        { path: 'staff', name: 'staff', component: () => import('@/admin/views/StaffView.vue') },
         { path: 'hours', name: 'hours', component: () => import('@/admin/views/HoursView.vue') },
         { path: 'bookings', name: 'bookings', component: () => import('@/admin/views/BookingsView.vue') },
         { path: 'features', name: 'features', component: () => import('@/admin/views/FeaturesView.vue') },

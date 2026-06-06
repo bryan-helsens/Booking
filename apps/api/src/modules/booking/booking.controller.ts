@@ -39,10 +39,36 @@ export class BookingController {
     return this.booking.saveHours(body);
   }
 
+  // Staff
+  @Get('staff')
+  listStaff(@Query('active') active?: string) {
+    return this.booking.listStaff(active === 'true');
+  }
+
+  @Get('services/:id/staff')
+  staffForService(@Param('id') id: string) {
+    return this.booking.staffForService(id);
+  }
+
+  @Post('staff')
+  createStaff(@Body() body: any) {
+    return this.booking.createStaff(body);
+  }
+
+  @Put('staff/:id')
+  updateStaff(@Param('id') id: string, @Body() body: any) {
+    return this.booking.updateStaff(id, body);
+  }
+
+  @Delete('staff/:id')
+  deleteStaff(@Param('id') id: string) {
+    return this.booking.deleteStaff(id);
+  }
+
   // Availability
   @Get('availability')
-  availability(@Query('serviceId') serviceId: string, @Query('date') date: string) {
-    return this.booking.availability(serviceId, date);
+  availability(@Query('serviceId') serviceId: string, @Query('date') date: string, @Query('staffId') staffId?: string) {
+    return this.booking.availability(serviceId, date, staffId);
   }
 
   // Bookings

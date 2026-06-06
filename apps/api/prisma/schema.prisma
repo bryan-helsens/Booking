@@ -42,6 +42,7 @@ model Tenant {
   bookings      Booking[]
   reviews       Review[]
   coupons       Coupon[]
+  staff         StaffMember[]
 }
 
 model Domain {
@@ -155,6 +156,21 @@ model Service {
   bufferAfter  Int       @default(0) // minutes
   isActive     Boolean   @default(true)
   bookings     Booking[]
+  staff        StaffMember[] @relation("ServiceStaff")
+
+  @@index([tenantId])
+}
+
+model StaffMember {
+  id        String    @id @default(cuid())
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String
+  title     String    @default("")
+  imageUrl  String    @default("")
+  isActive  Boolean   @default(true)
+  services  Service[] @relation("ServiceStaff")
+  bookings  Booking[]
 
   @@index([tenantId])
 }
@@ -203,6 +219,8 @@ model Booking {
   tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   serviceId     String
   service       Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  staffId       String?
+  staff         StaffMember? @relation(fields: [staffId], references: [id])
   customerName  String
   customerEmail String
   startsAt      DateTime
@@ -213,4 +231,5 @@ model Booking {
 
   @@index([tenantId])
   @@index([serviceId])
+  @@index([staffId])
 }

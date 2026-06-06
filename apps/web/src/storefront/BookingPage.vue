@@ -26,9 +26,15 @@
         </el-row>
       </div>
 
-      <!-- Step 1: pick date + slot -->
+      <!-- Step 1: pick staff (optional) + date + slot -->
       <div v-else-if="step === 1" class="slots">
-        <el-date-picker v-model="date" type="date" value-format="YYYY-MM-DD" :clearable="false" :disabled-date="past" @change="loadSlots" />
+        <div class="pickers">
+          <el-select v-if="staffList.length" v-model="selectedStaff" placeholder="Medewerker" @change="loadSlots" style="width: 200px">
+            <el-option label="Geen voorkeur" value="" />
+            <el-option v-for="m in staffList" :key="m.id" :label="m.name" :value="m.id" />
+          </el-select>
+          <el-date-picker v-model="date" type="date" value-format="YYYY-MM-DD" :clearable="false" :disabled-date="past" @change="loadSlots" />
+        </div>
         <el-empty v-if="loadedSlots && slots.length === 0" description="Gesloten of geen beschikbaarheid op deze dag" />
         <div class="slot-grid" v-else>
           <el-button
@@ -141,6 +147,8 @@ const closures = computed<any[]>(() => site.settings?.closures || []);
 const createdBooking = ref<{ id: string; email: string } | null>(null);
 const cancelling = ref(false);
 const cancelled = ref(false);
+const staffList = ref<any[]>([]);
+const selectedStaff = ref('');
 
 onMounted(async () => {
   const { data } = await api.get('/services?active=true');
@@ -180,13 +188,24 @@ async function applyCoupon() {
 
 async function loadSlots() {
   loadedSlots.value = false;
-  const { data } = await api.get('/availability', { params: { serviceId: form.value.serviceId, date: date.value } });
+  const params: any = { serviceId: form.value.serviceId, date: date.value };
+  if (selectedStaff.value) params.staffId = selectedStaff.value;
+  const { data } = await api.get('/availability', { params });
   slots.value = data.slots;
   loadedSlots.value = true;
 }
 
+async function loadStaff() {
+  try {
+    const { data } = await api.get(`/services/${form.value.serviceId}/staff`);
+    staffList.value = data;
+  } catch {
+    staffList.value = [];
+  }
+}
+
 async function next() {
-  if (step.value === 0) { step.value = 1; await loadSlots(); return; }
+  if (step.value === 0) { step.value = 1; selectedStaff.value = ''; await loadStaff(); await loadSlots(); return; }
   if (step.value === 1) { step.value = 2; return; }
   if (step.value === 2) {
     submitting.value = true;
@@ -197,7 +216,7 @@ async function next() {
         .filter(Boolean)
         .join('\n');
       const notes = [form.value.notes, extra].filter(Boolean).join('\n');
-      const { data } = await api.post('/bookings', { ...form.value, notes });
+      const { data } = await api.post('/bookings', { ...form.value, notes, staffId: selectedStaff.value || undefined });
       createdBooking.value = { id: data.id, email: form.value.customerEmail };
       step.value = 3;
     } catch (e: any) {
@@ -217,6 +236,8 @@ function reset() {
   couponPct.value = 0;
   createdBooking.value = null;
   cancelled.value = false;
+  staffList.value = [];
+  selectedStaff.value = '';
 }
 
 const euro = (c: number) => site.formatMoney(c);
@@ -260,6 +281,7 @@ function thumb(s: Service) {
 .desc { color: var(--el-text-color-secondary); min-height: 36px; }
 .price { font-weight: 700; color: var(--app-color-secondary); }
 .slots { text-align: center; }
+.pickers { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .slot-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 24px; }
 .details { display: flex; gap: 24px; flex-wrap: wrap; }
 .form { flex: 1; min-width: 300px; }
