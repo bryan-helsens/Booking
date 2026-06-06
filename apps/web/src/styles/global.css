@@ -1,0 +1,28 @@
+:root {
+  --app-color-primary: #0ea5a4;
+  --app-color-secondary: #f59e0b;
+  --app-color-accent: #ec4899;
+  --app-color-bg: #ffffff;
+  --app-color-text: #1f2937;
+  --app-font-body: system-ui, sans-serif;
+  --app-font-heading: system-ui, sans-serif;
+  --app-radius: 12px;
+}
+
+* { box-sizing: border-box; }
+html, body, #app { height: 100%; margin: 0; }
+body {
+  font-family: var(--app-font-body);
+  color: var(--app-color-text);
+  background: var(--app-color-bg);
+}
+h1, h2, h3, h4 { font-family: var(--app-font-heading); }
+
+/* Storefront helpers */
+.sf-section { padding: 64px 24px; }
+.sf-container { max-width: 1100px; margin: 0 auto; }
+.sf-card {
+  border-radius: var(--app-radius);
+  overflow: hidden;
+}
+a { color: var(--app-color-primary); }

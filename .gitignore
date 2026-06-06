@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+
+# Prisma / SQLite
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal
+apps/api/prisma/dev.db
+
+# env
+.env
+.env.local
+
+# build
+apps/web/dist/
+apps/api/dist/

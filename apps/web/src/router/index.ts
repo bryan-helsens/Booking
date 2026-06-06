@@ -1,0 +1,42 @@
+import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
+
+export const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    // ── Storefront (public, database-driven) ──
+    {
+      path: '/',
+      component: () => import('@/storefront/StorefrontLayout.vue'),
+      children: [
+        { path: '', name: 'home', component: () => import('@/storefront/StorefrontPage.vue') },
+        { path: 'booking', name: 'booking', component: () => import('@/storefront/BookingPage.vue') },
+      ],
+    },
+    // ── Admin dashboard ──
+    { path: '/login', name: 'login', component: () => import('@/admin/LoginView.vue') },
+    {
+      path: '/admin',
+      component: () => import('@/admin/AdminLayout.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        { path: '', name: 'dashboard', component: () => import('@/admin/views/DashboardView.vue') },
+        { path: 'branding', name: 'branding', component: () => import('@/admin/views/BrandingView.vue') },
+        { path: 'content', name: 'content', component: () => import('@/admin/views/ContentView.vue') },
+        { path: 'builder', name: 'builder', component: () => import('@/admin/views/BuilderView.vue') },
+        { path: 'services', name: 'services', component: () => import('@/admin/views/ServicesView.vue') },
+        { path: 'hours', name: 'hours', component: () => import('@/admin/views/HoursView.vue') },
+        { path: 'bookings', name: 'bookings', component: () => import('@/admin/views/BookingsView.vue') },
+        { path: 'features', name: 'features', component: () => import('@/admin/views/FeaturesView.vue') },
+      ],
+    },
+  ],
+});
+
+router.beforeEach((to) => {
+  if (to.meta.requiresAuth) {
+    const auth = useAuthStore();
+    if (!auth.isAuthenticated()) return { name: 'login', query: { redirect: to.fullPath } };
+  }
+  return true;
+});
