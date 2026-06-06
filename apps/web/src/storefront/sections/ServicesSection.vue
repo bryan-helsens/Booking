@@ -1,14 +1,14 @@
 <template>
   <section class="sf-section">
     <div class="sf-container">
-      <h2 class="title">{{ props.title || 'Onze diensten' }}</h2>
+      <h2 class="title">{{ props.block.title || 'Onze diensten' }}</h2>
       <el-row :gutter="20">
         <el-col
           v-for="s in services"
           :key="s.id"
           :xs="24"
           :sm="12"
-          :md="Math.round(24 / (props.columns || 3))"
+          :md="Math.round(24 / (props.block.columns || 3))"
         >
           <el-card class="sf-card service-card" shadow="hover">
             <h3>{{ s.name }}</h3>
@@ -31,7 +31,7 @@ import { useRouter } from 'vue-router';
 import { api } from '@/api/client';
 import type { Service } from '@/types';
 
-defineProps<{ props: Record<string, any> }>();
+const props = defineProps<{ block: Record<string, any> }>();
 const router = useRouter();
 const services = ref<Service[]>([]);
 

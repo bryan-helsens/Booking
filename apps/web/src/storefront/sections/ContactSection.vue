@@ -1,7 +1,7 @@
 <template>
   <section class="sf-section contact">
     <div class="sf-container">
-      <h2 class="title">{{ props.title || 'Contact' }}</h2>
+      <h2 class="title">{{ props.block.title || 'Contact' }}</h2>
       <el-row :gutter="24" v-if="content">
         <el-col :xs="24" :md="8">
           <el-icon><Location /></el-icon>
@@ -24,7 +24,7 @@
 import { computed } from 'vue';
 import { useSiteStore } from '@/stores/site';
 
-defineProps<{ props: Record<string, any> }>();
+const props = defineProps<{ block: Record<string, any> }>();
 const site = useSiteStore();
 const content = computed(() => site.content);
 </script>

@@ -1,6 +1,6 @@
 <template>
   <template v-for="section in visibleSections" :key="section.id">
-    <component :is="resolve(section.type)" v-if="resolve(section.type)" :props="section.props" />
+    <component :is="resolve(section.type)" v-if="resolve(section.type)" :block="section.props" />
     <div v-else class="unknown sf-section">Onbekend component: {{ section.type }}</div>
   </template>
 </template>

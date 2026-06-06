@@ -1,7 +1,7 @@
 <template>
   <section class="sf-section testimonials">
     <div class="sf-container">
-      <h2 class="title">{{ props.title || 'Wat klanten zeggen' }}</h2>
+      <h2 class="title">{{ props.block.title || 'Wat klanten zeggen' }}</h2>
       <el-row :gutter="20">
         <el-col v-for="(t, i) in items" :key="i" :xs="24" :md="8">
           <el-card class="sf-card" shadow="never">
@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{ props: Record<string, any> }>();
+const props = defineProps<{ block: Record<string, any> }>();
 // Demo reviews — in production these come from the Review table / feature.
 const items = [
   { rating: 5, quote: 'Fantastische ervaring, kom zeker terug!', author: 'Sanne' },

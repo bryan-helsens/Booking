@@ -1,14 +1,14 @@
 <template>
   <section class="sf-section richtext">
     <div class="sf-container">
-      <h2>{{ props.heading }}</h2>
-      <p class="body">{{ props.body }}</p>
+      <h2>{{ props.block.heading }}</h2>
+      <p class="body">{{ props.block.body }}</p>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-defineProps<{ props: Record<string, any> }>();
+const props = defineProps<{ block: Record<string, any> }>();
 </script>
 
 <style scoped>

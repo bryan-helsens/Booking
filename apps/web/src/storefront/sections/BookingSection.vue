@@ -1,7 +1,7 @@
 <template>
   <section class="sf-section booking">
     <div class="sf-container inner">
-      <h2 class="title">{{ props.title || 'Maak een afspraak' }}</h2>
+      <h2 class="title">{{ props.block.title || 'Maak een afspraak' }}</h2>
       <p>Kies een dienst en een tijdstip dat jou uitkomt.</p>
       <el-button type="primary" size="large" round @click="goBook">Naar de boekingskalender</el-button>
     </div>
@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-defineProps<{ props: Record<string, any> }>();
+const props = defineProps<{ block: Record<string, any> }>();
 const router = useRouter();
 const goBook = () => router.push({ name: 'booking' });
 </script>

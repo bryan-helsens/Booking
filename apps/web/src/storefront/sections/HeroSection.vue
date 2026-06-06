@@ -1,15 +1,15 @@
 <template>
   <section
     class="sf-section hero"
-    :class="`align-${props.align || 'center'}`"
+    :class="`align-${props.block.align || 'center'}`"
     :style="bgStyle"
   >
-    <div class="overlay" v-if="props.bgImage" />
+    <div class="overlay" v-if="props.block.bgImage" />
     <div class="sf-container hero-inner">
-      <h1 class="hero-title">{{ props.title }}</h1>
-      <p class="hero-sub">{{ props.subtitle }}</p>
+      <h1 class="hero-title">{{ props.block.title }}</h1>
+      <p class="hero-sub">{{ props.block.subtitle }}</p>
       <el-button type="primary" size="large" round @click="goBook">
-        {{ props.ctaLabel || 'Boek nu' }}
+        {{ props.block.ctaLabel || 'Boek nu' }}
       </el-button>
     </div>
   </section>
@@ -19,12 +19,12 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
-const props = defineProps<{ props: Record<string, any> }>().props as any;
+const props = defineProps<{ block: Record<string, any> }>();
 const router = useRouter();
 
 const bgStyle = computed(() =>
-  props.bgImage
-    ? { backgroundImage: `url(${props.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+  props.block.bgImage
+    ? { backgroundImage: `url(${props.block.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     : { background: 'linear-gradient(135deg, var(--app-color-primary), var(--app-color-accent))' },
 );
 
