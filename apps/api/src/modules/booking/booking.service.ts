@@ -259,19 +259,25 @@ export class BookingService {
     const tenantId = this.ctx.id;
     const bookings = await this.prisma.booking.findMany({
       where: { tenantId },
-      include: { service: { select: { name: true, priceCents: true } }, staff: { select: { name: true } } },
+      include: { service: { select: { id: true, name: true, priceCents: true } }, staff: { select: { id: true, name: true } } },
     });
     const now = Date.now();
     const active = bookings.filter((b) => b.status !== 'cancelled');
+    const completed = active.filter((b) => b.startsAt.getTime() < now);
     const revenueCents = active.reduce((sum, b) => sum + (b.service?.priceCents || 0), 0);
 
-    const tally = (key: (b: (typeof bookings)[number]) => string) => {
-      const m: Record<string, number> = {};
+    // Group active bookings, summing count + revenue, keyed by id.
+    const group = (key: (b: (typeof bookings)[number]) => { id: string; name: string } | null) => {
+      const m = new Map<string, { id: string; name: string; count: number; revenueCents: number }>();
       for (const b of active) {
         const k = key(b);
-        if (k) m[k] = (m[k] || 0) + 1;
+        if (!k) continue;
+        const cur = m.get(k.id) || { id: k.id, name: k.name, count: 0, revenueCents: 0 };
+        cur.count += 1;
+        cur.revenueCents += b.service?.priceCents || 0;
+        m.set(k.id, cur);
       }
-      return Object.entries(m).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+      return [...m.values()].sort((a, b) => b.count - a.count);
     };
 
     // Bookings per day for the last 14 days (by appointment date).
@@ -288,12 +294,14 @@ export class BookingService {
     return {
       totalBookings: bookings.length,
       activeBookings: active.length,
+      completed: completed.length,
       upcoming: active.filter((b) => b.startsAt.getTime() > now).length,
       cancelled: bookings.length - active.length,
       cancelRate: bookings.length ? Math.round(((bookings.length - active.length) / bookings.length) * 100) : 0,
       revenueCents,
-      perService: tally((b) => b.service?.name || '—'),
-      perStaff: tally((b) => b.staff?.name || ''),
+      avgValueCents: active.length ? Math.round(revenueCents / active.length) : 0,
+      perService: group((b) => (b.service ? { id: b.service.id, name: b.service.name } : null)),
+      perStaff: group((b) => (b.staff ? { id: b.staff.id, name: b.staff.name } : null)),
       last14Days: days,
     };
   }

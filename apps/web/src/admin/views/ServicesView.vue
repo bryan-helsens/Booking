@@ -15,8 +15,9 @@
       <el-table-column prop="name" label="Naam" />
       <el-table-column label="Duur" width="100"><template #default="{ row }">{{ row.durationMin }} min</template></el-table-column>
       <el-table-column label="Prijs" width="100"><template #default="{ row }">{{ euro(row.priceCents) }}</template></el-table-column>
-      <el-table-column prop="capacity" label="Capaciteit" width="110" />
-      <el-table-column label="Buffer" width="120"><template #default="{ row }">{{ row.bufferBefore }}/{{ row.bufferAfter }} min</template></el-table-column>
+      <el-table-column prop="capacity" label="Cap." width="80" />
+      <el-table-column label="Geboekt" width="100"><template #default="{ row }">{{ stats[row.id]?.count || 0 }}</template></el-table-column>
+      <el-table-column label="Omzet" width="110"><template #default="{ row }">{{ euro(stats[row.id]?.revenueCents || 0) }}</template></el-table-column>
       <el-table-column label="Actief" width="90"><template #default="{ row }"><el-tag :type="row.isActive ? 'success' : 'info'">{{ row.isActive ? 'Ja' : 'Nee' }}</el-tag></template></el-table-column>
       <el-table-column label="" width="120">
         <template #default="{ row }">
@@ -62,6 +63,7 @@ import type { Service } from '@/types';
 const site = useSiteStore();
 
 const services = ref<Service[]>([]);
+const stats = ref<Record<string, { count: number; revenueCents: number }>>({});
 const dialog = ref(false);
 const saving = ref(false);
 const blank = () => ({ id: '', name: '', description: '', imageUrl: '', durationMin: 60, priceCents: 0, capacity: 1, bufferBefore: 0, bufferAfter: 0, isActive: true });
@@ -73,8 +75,9 @@ const priceEuro = computed({
 });
 
 async function load() {
-  const { data } = await api.get('/services');
-  services.value = data;
+  const [sv, an] = await Promise.all([api.get('/services'), api.get('/analytics')]);
+  services.value = sv.data;
+  stats.value = Object.fromEntries((an.data.perService || []).map((s: any) => [s.id, { count: s.count, revenueCents: s.revenueCents }]));
 }
 onMounted(load);
 

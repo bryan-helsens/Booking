@@ -44,6 +44,17 @@
       </el-col>
     </el-row>
 
+    <el-card style="margin-top: 20px">
+      <template #header>Vandaag <el-tag size="small" round>{{ today.length }}</el-tag></template>
+      <el-table :data="today" v-if="today.length">
+        <el-table-column label="Tijd" width="90"><template #default="{ row }">{{ time(row.startsAt) }}</template></el-table-column>
+        <el-table-column label="Klant" prop="customerName" />
+        <el-table-column label="Dienst"><template #default="{ row }">{{ row.service?.name }}</template></el-table-column>
+        <el-table-column label="Medewerker"><template #default="{ row }">{{ row.staff?.name || '—' }}</template></el-table-column>
+      </el-table>
+      <el-empty v-else description="Geen afspraken vandaag" :image-size="70" />
+    </el-card>
+
     <el-card header="Recente reserveringen" style="margin-top: 20px">
       <el-table :data="recent" v-if="recent.length">
         <el-table-column label="Klant" prop="customerName" />
@@ -88,9 +99,16 @@ onMounted(async () => {
 });
 
 const recent = computed(() => bookings.value.slice(0, 6));
+const today = computed(() => {
+  const key = new Date().toISOString().slice(0, 10);
+  return bookings.value
+    .filter((b: any) => b.status !== 'cancelled' && new Date(b.startsAt).toISOString().slice(0, 10) === key)
+    .sort((a: any, b: any) => +new Date(a.startsAt) - +new Date(b.startsAt));
+});
 const max = computed(() => Math.max(1, ...chart.value.map((c) => c.count)));
 const pct = (n: number) => Math.round((n / max.value) * 100);
 const dt = (iso: string) => new Date(iso).toLocaleString('nl-NL', { dateStyle: 'medium', timeStyle: 'short' });
+const time = (iso: string) => new Date(iso).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
 </script>
 
 <style scoped>

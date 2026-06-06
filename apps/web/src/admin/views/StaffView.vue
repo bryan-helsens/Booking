@@ -16,6 +16,12 @@
       <el-table-column label="Diensten">
         <template #default="{ row }">{{ (row.services || []).length }}</template>
       </el-table-column>
+      <el-table-column label="Afspraken">
+        <template #default="{ row }">{{ stats[row.id]?.count || 0 }}</template>
+      </el-table-column>
+      <el-table-column label="Omzet">
+        <template #default="{ row }">{{ site.formatMoney(stats[row.id]?.revenueCents || 0) }}</template>
+      </el-table-column>
       <el-table-column label="Actief" width="90">
         <template #default="{ row }"><el-tag :type="row.isActive ? 'success' : 'info'">{{ row.isActive ? 'Ja' : 'Nee' }}</el-tag></template>
       </el-table-column>
@@ -53,19 +59,23 @@ import { onMounted, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Plus, Edit, Delete } from '@element-plus/icons-vue';
 import { api } from '@/api/client';
+import { useSiteStore } from '@/stores/site';
 import ImageUploader from '@/components/ImageUploader.vue';
 
+const site = useSiteStore();
 const staff = ref<any[]>([]);
 const services = ref<any[]>([]);
+const stats = ref<Record<string, { count: number; revenueCents: number }>>({});
 const dialog = ref(false);
 const saving = ref(false);
 const blank = () => ({ id: '', name: '', title: '', imageUrl: '', serviceIds: [] as string[], isActive: true });
 const form = ref<any>(blank());
 
 async function load() {
-  const [st, sv] = await Promise.all([api.get('/staff'), api.get('/services')]);
+  const [st, sv, an] = await Promise.all([api.get('/staff'), api.get('/services'), api.get('/analytics')]);
   staff.value = st.data;
   services.value = sv.data;
+  stats.value = Object.fromEntries((an.data.perStaff || []).map((s: any) => [s.id, { count: s.count, revenueCents: s.revenueCents }]));
 }
 onMounted(load);
 
