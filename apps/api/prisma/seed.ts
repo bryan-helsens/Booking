@@ -211,6 +211,10 @@ const TENANTS: TenantSeed[] = [
       bookingRules: { maxDaysAhead: 45, leadTimeMinutes: 120, slotIntervalMin: 0, cancellationHours: 24 },
       regional: { currency: 'EUR', locale: 'nl-NL', timezone: 'Europe/Amsterdam' },
       formFields: [{ key: 'phone', label: 'Telefoonnummer', type: 'text', required: true }],
+      closures: [
+        { from: '2026-07-20', to: '2026-08-03', label: 'Zomervakantie' },
+        { from: '2026-12-25', to: '2026-12-26', label: 'Kerst' },
+      ],
     },
   },
   {

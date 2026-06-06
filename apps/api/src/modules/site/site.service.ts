@@ -53,6 +53,7 @@ export class SiteService {
       bookingRules: { ...current.bookingRules, ...(data.bookingRules || {}) },
       regional: { ...current.regional, ...(data.regional || {}) },
       formFields: Array.isArray(data.formFields) ? data.formFields : current.formFields,
+      closures: Array.isArray(data.closures) ? data.closures : current.closures,
     };
     await this.prisma.tenant.update({ where: { id: this.ctx.id }, data: { settings: toJson(next) } });
     return next;

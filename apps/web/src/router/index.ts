@@ -11,6 +11,7 @@ export const router = createRouter({
       children: [
         { path: '', name: 'home', component: () => import('@/storefront/StorefrontPage.vue') },
         { path: 'booking', name: 'booking', component: () => import('@/storefront/BookingPage.vue') },
+        { path: 'booking/manage', name: 'manage', component: () => import('@/storefront/ManageBookingView.vue') },
         { path: ':slug', name: 'page', component: () => import('@/storefront/StorefrontPage.vue') },
       ],
     },

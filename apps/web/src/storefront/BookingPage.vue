@@ -78,11 +78,19 @@
 
       <!-- Step 3: confirmation -->
       <div v-else class="done">
-        <el-result icon="success" title="Afspraak bevestigd!" :sub-title="`Bedankt ${form.customerName}, we verwachten je op ${time(form.startsAt)}.`">
-          <template #extra><el-button type="primary" @click="reset">Nieuwe afspraak</el-button></template>
+        <el-result
+          :icon="cancelled ? 'warning' : 'success'"
+          :title="cancelled ? 'Afspraak geannuleerd' : 'Afspraak bevestigd!'"
+          :sub-title="cancelled ? 'Je afspraak is geannuleerd. Tot een volgende keer!' : `Bedankt ${form.customerName}, we verwachten je op ${time(form.startsAt)}.`"
+        >
+          <template #extra>
+            <el-button type="primary" @click="reset">Nieuwe afspraak</el-button>
+            <el-button v-if="!cancelled" :loading="cancelling" @click="cancelBooking">Afspraak annuleren</el-button>
+          </template>
         </el-result>
+        <p v-if="!cancelled" class="ref">Je referentie: <code>{{ createdBooking?.id }}</code> — bewaar deze om later te annuleren via <router-link to="/booking/manage">afspraak beheren</router-link>.</p>
 
-        <el-card v-if="emailEnabled" class="email sf-card">
+        <el-card v-if="emailEnabled && !cancelled" class="email sf-card">
           <div class="email-head"><el-icon><Message /></el-icon> Bevestigingsmail verzonden naar {{ form.customerEmail }}</div>
           <div class="email-body">
             <strong>{{ site.content?.companyName }}</strong>
@@ -129,6 +137,10 @@ const couponsEnabled = computed(() => site.isEnabled('coupons'));
 const emailEnabled = computed(() => site.isEnabled('email'));
 const formFields = computed<any[]>(() => site.settings?.formFields || []);
 const maxDaysAhead = computed(() => Number(site.settings?.bookingRules?.maxDaysAhead) || 60);
+const closures = computed<any[]>(() => site.settings?.closures || []);
+const createdBooking = ref<{ id: string; email: string } | null>(null);
+const cancelling = ref(false);
+const cancelled = ref(false);
 
 onMounted(async () => {
   const { data } = await api.get('/services?active=true');
@@ -185,7 +197,8 @@ async function next() {
         .filter(Boolean)
         .join('\n');
       const notes = [form.value.notes, extra].filter(Boolean).join('\n');
-      await api.post('/bookings', { ...form.value, notes });
+      const { data } = await api.post('/bookings', { ...form.value, notes });
+      createdBooking.value = { id: data.id, email: form.value.customerEmail };
       step.value = 3;
     } catch (e: any) {
       ElMessage.error(e?.response?.data?.message || 'Boeking mislukt');
@@ -202,17 +215,36 @@ function reset() {
   loadedSlots.value = false;
   couponCode.value = '';
   couponPct.value = 0;
+  createdBooking.value = null;
+  cancelled.value = false;
 }
 
 const euro = (c: number) => site.formatMoney(c);
 const time = (iso: string) => (iso ? new Date(iso).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' }) : '');
-// Disable past dates and dates beyond the tenant's "max days ahead" rule.
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+// Disable past dates, dates beyond "max days ahead", and closure/holiday dates.
 const past = (d: Date) => {
   const max = new Date();
   max.setHours(0, 0, 0, 0);
   max.setDate(max.getDate() + maxDaysAhead.value);
-  return d.getTime() < Date.now() - 86400000 || d.getTime() > max.getTime();
+  if (d.getTime() < Date.now() - 86400000 || d.getTime() > max.getTime()) return true;
+  const s = ymd(d);
+  return closures.value.some((c) => c.from && c.to && s >= c.from && s <= c.to);
 };
+
+async function cancelBooking() {
+  if (!createdBooking.value) return;
+  cancelling.value = true;
+  try {
+    await api.post(`/my-booking/${createdBooking.value.id}/cancel`, { email: createdBooking.value.email });
+    cancelled.value = true;
+    ElMessage.success('Je afspraak is geannuleerd.');
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.message || 'Annuleren mislukt');
+  } finally {
+    cancelling.value = false;
+  }
+}
 function thumb(s: Service) {
   return s.imageUrl ? { backgroundImage: `url(${s.imageUrl})` } : { background: 'linear-gradient(135deg, var(--app-color-primary), var(--app-color-accent))' };
 }
@@ -239,6 +271,8 @@ function thumb(s: Service) {
 .line.total { font-weight: 700; font-size: 1.15rem; }
 .actions { display: flex; justify-content: center; gap: 12px; margin-top: 32px; }
 .done { max-width: 600px; margin: 0 auto; }
+.ref { text-align: center; color: var(--el-text-color-secondary); font-size: 0.9rem; margin: 4px 0 16px; }
+.ref code { background: var(--el-fill-color); padding: 2px 6px; border-radius: 6px; }
 .email { margin-top: 8px; }
 .email-head { display: flex; align-items: center; gap: 8px; font-weight: 600; padding-bottom: 12px; border-bottom: 1px solid var(--el-border-color-lighter); margin-bottom: 12px; }
 .email-body p { margin: 6px 0; }

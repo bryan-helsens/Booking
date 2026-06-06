@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TenantContext } from '../../common/tenant-context.service';
-import { resolveSettings } from '../../common/settings';
+import { resolveSettings, isClosedOn } from '../../common/settings';
 
 @Injectable()
 export class BookingService {
@@ -72,7 +72,10 @@ export class BookingService {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new BadRequestException('date must be YYYY-MM-DD');
 
     const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
-    const { bookingRules } = resolveSettings(tenant?.settings);
+    const { bookingRules, closures } = resolveSettings(tenant?.settings);
+
+    // Closed on holidays / blackout dates.
+    if (isClosedOn(date, closures)) return { date, slots: [], closed: true };
 
     const day = new Date(`${date}T00:00:00`);
     // Enforce "max days ahead" booking rule.
@@ -122,9 +125,12 @@ export class BookingService {
     const start = new Date(data.startsAt);
     const end = new Date(start.getTime() + service.durationMin * 60000);
 
-    // Enforce booking rules server-side (lead time + max days ahead).
+    // Enforce booking rules server-side (lead time + max days ahead + closures).
     const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
-    const { bookingRules } = resolveSettings(tenant?.settings);
+    const { bookingRules, closures } = resolveSettings(tenant?.settings);
+    if (isClosedOn(data.startsAt.slice(0, 10), closures)) {
+      throw new BadRequestException('De zaak is gesloten op deze datum.');
+    }
     if (start.getTime() < Date.now() + bookingRules.leadTimeMinutes * 60000) {
       throw new BadRequestException('Dit tijdstip is te kort dag — kies een later moment.');
     }
@@ -155,6 +161,29 @@ export class BookingService {
     const b = await this.prisma.booking.findFirst({ where: { id, tenantId: this.ctx.id } });
     if (!b) throw new NotFoundException('Booking not found');
     return this.prisma.booking.update({ where: { id }, data: { status } });
+  }
+
+  // ── Customer self-service (look up + cancel own booking) ──
+  async findForCustomer(id: string, email: string) {
+    const b = await this.prisma.booking.findFirst({
+      where: { id, tenantId: this.ctx.id, customerEmail: { equals: (email || '').trim() } },
+      include: { service: { select: { name: true } } },
+    });
+    if (!b) throw new NotFoundException('Geen afspraak gevonden met deze gegevens.');
+    return b;
+  }
+
+  async cancelByCustomer(id: string, email: string) {
+    const b = await this.findForCustomer(id, email);
+    if (b.status === 'cancelled') return b;
+
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: this.ctx.id } });
+    const { bookingRules } = resolveSettings(tenant?.settings);
+    const cutoff = b.startsAt.getTime() - bookingRules.cancellationHours * 3600000;
+    if (Date.now() > cutoff) {
+      throw new BadRequestException(`Annuleren kan tot ${bookingRules.cancellationHours} uur van tevoren.`);
+    }
+    return this.prisma.booking.update({ where: { id: b.id }, data: { status: 'cancelled' } });
   }
 
   // ── Reviews ──

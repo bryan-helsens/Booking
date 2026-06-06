@@ -56,6 +56,22 @@
         </el-card>
       </el-tab-pane>
 
+      <!-- Closures / holidays -->
+      <el-tab-pane label="Sluitingsdagen">
+        <el-card>
+          <el-alert type="info" :closable="false" show-icon
+            title="Vakanties of vaste sluitingsdagen. Op deze datums kan niet geboekt worden." style="margin-bottom: 16px" />
+          <div v-for="(c, i) in closures" :key="i" class="field-row">
+            <el-date-picker v-model="c.from" type="date" value-format="YYYY-MM-DD" placeholder="Van" style="width: 160px" />
+            <span>t/m</span>
+            <el-date-picker v-model="c.to" type="date" value-format="YYYY-MM-DD" placeholder="Tot" style="width: 160px" />
+            <el-input v-model="c.label" placeholder="Reden (bv. Kerstvakantie)" style="flex: 1; min-width: 200px" />
+            <el-button :icon="Delete" circle type="danger" plain @click="closures.splice(i, 1)" />
+          </div>
+          <el-button :icon="Plus" @click="addClosure">Sluitingsperiode toevoegen</el-button>
+        </el-card>
+      </el-tab-pane>
+
       <!-- Custom form fields -->
       <el-tab-pane label="Formuliervelden">
         <el-card>
@@ -95,6 +111,7 @@ const regional = reactive({ currency: 'EUR', locale: 'nl-NL', timezone: 'Europe/
 const formFields = reactive<any[]>(
   (s.formFields || []).map((f: any) => ({ ...f, optionsText: (f.options || []).join(', ') })),
 );
+const closures = reactive<any[]>((s.closures || []).map((c: any) => ({ ...c })));
 
 const currencies = [
   { code: 'EUR', label: 'Euro' },
@@ -117,6 +134,10 @@ function addField() {
   formFields.push({ label: '', type: 'text', required: false, optionsText: '' });
 }
 
+function addClosure() {
+  closures.push({ from: '', to: '', label: '' });
+}
+
 const slugify = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'veld';
 
 async function save() {
@@ -131,7 +152,8 @@ async function save() {
         required: !!f.required,
         options: f.type === 'select' ? String(f.optionsText || '').split(',').map((o: string) => o.trim()).filter(Boolean) : undefined,
       }));
-    await site.saveSettings({ bookingRules: { ...bookingRules }, regional: { ...regional }, formFields: fields });
+    const validClosures = closures.filter((c) => c.from && c.to).map((c) => ({ from: c.from, to: c.to, label: c.label || '' }));
+    await site.saveSettings({ bookingRules: { ...bookingRules }, regional: { ...regional }, formFields: fields, closures: validClosures });
     ElMessage.success('Instellingen opgeslagen');
   } finally {
     saving.value = false;
