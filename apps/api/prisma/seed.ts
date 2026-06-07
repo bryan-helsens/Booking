@@ -149,6 +149,7 @@ async function seedComponents() {
 interface TenantSeed {
   slug: string;
   name: string;
+  plan?: string;
   host: string;
   mode: 'light' | 'dark';
   tokens: Record<string, any>;
@@ -166,6 +167,7 @@ const TENANTS: TenantSeed[] = [
   {
     slug: 'acme',
     name: 'Acme Wellness Spa',
+    plan: 'pro',
     host: 'acme.localhost',
     mode: 'light',
     tokens: {
@@ -225,6 +227,7 @@ const TENANTS: TenantSeed[] = [
   {
     slug: 'studio',
     name: 'Studio Noir Barber',
+    plan: 'starter',
     host: 'studio.localhost',
     mode: 'dark',
     tokens: {
@@ -279,6 +282,7 @@ const TENANTS: TenantSeed[] = [
   {
     slug: 'lumen',
     name: 'Lumen Tandartspraktijk',
+    plan: 'pro',
     host: 'lumen.localhost',
     mode: 'light',
     tokens: { colorPrimary: '#2563eb', colorSecondary: '#0891b2', colorAccent: '#f97316', colorBg: '#ffffff', colorText: '#0f172a', fontBody: "'Inter', system-ui, sans-serif", fontHeading: "'Poppins', system-ui, sans-serif", radius: 12 },
@@ -367,6 +371,7 @@ const TENANTS: TenantSeed[] = [
   {
     slug: 'ink',
     name: 'Ink & Co Tattoo',
+    plan: 'free',
     host: 'ink.localhost',
     mode: 'dark',
     tokens: { colorPrimary: '#dc2626', colorSecondary: '#a3a3a3', colorAccent: '#f59e0b', colorBg: '#0a0a0a', colorText: '#e5e5e5', fontBody: "'Roboto', system-ui, sans-serif", fontHeading: "'Oswald', system-ui, sans-serif", radius: 2 },
@@ -414,6 +419,7 @@ const TENANTS: TenantSeed[] = [
   {
     slug: 'pilates',
     name: 'Core & Co Pilates',
+    plan: 'starter',
     host: 'pilates.localhost',
     mode: 'light',
     tokens: { colorPrimary: '#db2777', colorSecondary: '#f59e0b', colorAccent: '#14b8a6', colorBg: '#fffafc', colorText: '#3f2233', fontBody: "'Montserrat', system-ui, sans-serif", fontHeading: "'Poppins', system-ui, sans-serif", radius: 18 },
@@ -469,10 +475,11 @@ function defaultBusinessHours(tenantId: string) {
 
 async function seedTenant(t: TenantSeed) {
   const settingsJson = J(t.settings || {});
+  const plan = (t as any).plan || 'free';
   const tenant = await prisma.tenant.upsert({
     where: { slug: t.slug },
-    update: { name: t.name, settings: settingsJson },
-    create: { slug: t.slug, name: t.name, settings: settingsJson },
+    update: { name: t.name, settings: settingsJson, plan, subscriptionStatus: 'active' },
+    create: { slug: t.slug, name: t.name, settings: settingsJson, plan, subscriptionStatus: 'active' },
   });
 
   await prisma.domain.upsert({

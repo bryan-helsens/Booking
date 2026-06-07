@@ -48,7 +48,16 @@ export class TenantsService {
     const preset = STARTER_THEMES[input.theme || 'fresh'] || STARTER_THEMES.fresh;
     const passwordHash = await hashPassword(input.password);
 
-    const tenant = await this.prisma.tenant.create({ data: { slug, name: companyName } });
+    const tenant = await this.prisma.tenant.create({
+      data: {
+        slug,
+        name: companyName,
+        // Start every new tenant on a 14-day Pro trial.
+        plan: 'pro',
+        subscriptionStatus: 'trialing',
+        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      },
+    });
 
     const sections = [
       { id: 's1', type: 'hero', visible: true, props: { title: `Welkom bij ${companyName}`, subtitle: input.description || 'Boek vandaag nog je afspraak.', ctaLabel: 'Boek nu', bgImage: '', align: 'center' } },

@@ -20,6 +20,7 @@
       </el-menu-item-group>
       <el-menu-item index="features" :route="{ name: 'features' }"><el-icon><Switch /></el-icon>Features</el-menu-item>
       <el-menu-item index="embed-admin" :route="{ name: 'embed-admin' }"><el-icon><Connection /></el-icon>Insluiten</el-menu-item>
+      <el-menu-item index="billing" :route="{ name: 'billing' }"><el-icon><Wallet /></el-icon>Abonnement</el-menu-item>
       <el-menu-item index="settings" :route="{ name: 'settings' }"><el-icon><Setting /></el-icon>Instellingen</el-menu-item>
     </el-menu>
   </div>

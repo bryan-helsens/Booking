@@ -52,9 +52,15 @@
       </div>
       <div class="copyright">
         <span>© {{ year }} {{ content?.companyName }}</span>
-        <router-link to="/admin" class="admin-link">Beheer →</router-link>
+        <span class="legal-links">
+          <router-link to="/privacy">Privacy</router-link>
+          <router-link to="/voorwaarden">Voorwaarden</router-link>
+          <router-link to="/admin" class="admin-link">Beheer →</router-link>
+        </span>
       </div>
     </footer>
+
+    <CookieConsent />
 
     <!-- Demo helper: switch tenant to showcase white-label theming -->
     <TenantSwitcher />
@@ -69,6 +75,7 @@ import { useSiteStore } from '@/stores/site';
 import { api } from '@/api/client';
 import { injectStructuredData } from '@/theme/seo';
 import TenantSwitcher from '@/components/TenantSwitcher.vue';
+import CookieConsent from '@/components/CookieConsent.vue';
 
 const site = useSiteStore();
 const content = computed(() => site.content);
@@ -126,6 +133,9 @@ onMounted(async () => {
 .f-brand strong { font-family: var(--app-font-heading); font-size: 1.2rem; }
 .brand-col .desc { color: var(--el-text-color-secondary); line-height: 1.6; max-width: 340px; }
 .copyright { max-width: 1100px; margin: 32px auto 0; padding: 18px 0; border-top: 1px solid var(--el-border-color-light); display: flex; justify-content: space-between; align-items: center; color: var(--el-text-color-secondary); font-size: 0.85rem; }
+.legal-links { display: flex; gap: 16px; align-items: center; }
+.legal-links a { color: var(--el-text-color-secondary); text-decoration: none; }
+.legal-links a:hover { color: var(--app-color-primary); }
 .admin-link { color: var(--el-text-color-secondary); text-decoration: none; }
 .admin-link:hover { color: var(--app-color-primary); }
 @media (max-width: 768px) {

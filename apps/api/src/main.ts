@@ -12,7 +12,8 @@ async function bootstrap() {
     Sentry.init({ dsn: process.env.SENTRY_DSN, tracesSampleRate: 0.1, environment: process.env.NODE_ENV || 'production' });
   }
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // rawBody is needed for Stripe webhook signature verification.
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
   // Trust the platform proxy (Render/Netlify) so rate-limiting sees real client IPs.
   app.set('trust proxy', 1);
   app.setGlobalPrefix('api');

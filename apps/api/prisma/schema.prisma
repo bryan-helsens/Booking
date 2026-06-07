@@ -28,6 +28,12 @@ model Tenant {
   // Flexible JSON-as-string bag for tenant-wide settings (booking rules,
   // regional/currency, custom form fields, ...). New settings need no migration.
   settings  String   @default("{}")
+  // Subscription / billing.
+  plan                 String    @default("free") // free | starter | pro
+  subscriptionStatus   String    @default("trialing") // trialing | active | past_due | canceled
+  trialEndsAt          DateTime?
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

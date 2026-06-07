@@ -15,6 +15,7 @@ export const useSiteStore = defineStore('site', () => {
   const content = ref<SiteContent | null>(null);
   const features = ref<FeatureMap>({});
   const settings = ref<any>({ bookingRules: {}, regional: { currency: 'EUR', locale: 'nl-NL' }, formFields: [] });
+  const plan = ref<string>('free');
   const loaded = ref(false);
 
   async function bootstrap() {
@@ -24,6 +25,7 @@ export const useSiteStore = defineStore('site', () => {
     content.value = data.content;
     features.value = data.features || {};
     if (data.settings) settings.value = data.settings;
+    plan.value = data.plan || 'free';
     if (theme.value) applyTokens(theme.value.tokens, theme.value.mode);
     if (content.value) updateDocumentMeta();
     loaded.value = true;
@@ -104,7 +106,7 @@ export const useSiteStore = defineStore('site', () => {
   }
 
   return {
-    tenant, theme, content, features, settings, loaded,
+    tenant, theme, content, features, settings, plan, loaded,
     bootstrap, switchTenant, currentTenant, formatMoney, saveSettings,
     previewTokens, restoreTheme, saveTheme, saveContent, saveFeatures, isEnabled,
   };

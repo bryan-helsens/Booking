@@ -16,6 +16,8 @@
           <el-button v-if="isMobile" text :icon="Menu" class="burger" @click="menuOpen = true" />
           <strong class="company">{{ site.content?.companyName || 'Laden...' }}</strong>
           <el-tag size="small" round>{{ site.currentTenant() }}</el-tag>
+          <el-tag size="small" round :type="site.plan === 'pro' ? 'success' : site.plan === 'starter' ? 'warning' : 'info'"
+            class="plan-tag" @click="$router.push({ name: 'billing' })">{{ planLabel }}</el-tag>
         </div>
         <div class="right">
           <el-button text @click="toggleMode">
@@ -60,6 +62,7 @@ const isMobile = ref(false);
 const menuOpen = ref(false);
 
 const userInitial = computed(() => auth.user?.name || 'Admin');
+const planLabel = computed(() => ({ free: 'Free', starter: 'Starter', pro: 'Pro' } as any)[site.plan] || 'Free');
 
 function onResize() {
   isMobile.value = window.innerWidth < 768;
@@ -98,6 +101,7 @@ function onCommand(cmd: string) {
 .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--el-border-color-light); padding: 0 12px; }
 .left { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .company { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 45vw; }
+.plan-tag { cursor: pointer; }
 .right { display: flex; align-items: center; gap: 4px; }
 .user { cursor: pointer; display: flex; align-items: center; gap: 4px; }
 .main { background: var(--el-fill-color-light); padding: 16px; }

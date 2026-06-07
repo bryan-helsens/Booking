@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { TenantContext } from '../../common/tenant-context.service';
 import { parseJson, toJson } from '../../common/json';
 import { resolveSettings } from '../../common/settings';
+import { planAllows } from '../../common/plans';
 
 @Injectable()
 export class SiteService {
@@ -31,12 +32,15 @@ export class SiteService {
       this.prisma.featureFlag.findMany({ where: { tenantId } }),
     ]);
     if (!tenant) throw new NotFoundException('Tenant not found');
+    // Effective features: flag enabled AND allowed by the tenant's plan.
+    const features = Object.fromEntries(flags.map((f) => [f.key, f.enabled && planAllows(tenant.plan, f.key)]));
     return {
       tenant: { id: tenant.id, slug: tenant.slug, name: tenant.name },
       theme: this.mapTheme(theme),
       content: this.mapContent(content),
-      features: Object.fromEntries(flags.map((f) => [f.key, f.enabled])),
+      features,
       settings: resolveSettings(tenant.settings),
+      plan: tenant.plan,
     };
   }
 

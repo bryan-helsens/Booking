@@ -12,6 +12,7 @@ import { BookingModule } from './modules/booking/booking.module';
 import { MediaModule } from './modules/media/media.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
 import { HealthModule } from './modules/health/health.module';
+import { BillingModule } from './modules/billing/billing.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { HealthModule } from './modules/health/health.module';
     MediaModule,
     TenantsModule,
     HealthModule,
+    BillingModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
