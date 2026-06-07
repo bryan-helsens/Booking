@@ -8,6 +8,13 @@ import BookingSection from './sections/BookingSection.vue';
 import GallerySection from './sections/GallerySection.vue';
 import OpeningHoursSection from './sections/OpeningHoursSection.vue';
 import FaqSection from './sections/FaqSection.vue';
+import CtaSection from './sections/CtaSection.vue';
+import StatsSection from './sections/StatsSection.vue';
+import TeamSection from './sections/TeamSection.vue';
+import ImageTextSection from './sections/ImageTextSection.vue';
+import VideoSection from './sections/VideoSection.vue';
+import FeaturesSection from './sections/FeaturesSection.vue';
+import SpacerSection from './sections/SpacerSection.vue';
 
 /**
  * Frontend component registry: maps a JSON `section.type` → Vue component.
@@ -24,6 +31,13 @@ export const sectionRegistry: Record<string, Component> = {
   gallery: GallerySection,
   openinghours: OpeningHoursSection,
   faq: FaqSection,
+  cta: CtaSection,
+  stats: StatsSection,
+  team: TeamSection,
+  imagetext: ImageTextSection,
+  video: VideoSection,
+  features: FeaturesSection,
+  spacer: SpacerSection,
 };
 
 export function resolveSection(type: string): Component | null {

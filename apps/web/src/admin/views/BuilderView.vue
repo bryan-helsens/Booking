@@ -46,10 +46,13 @@
               <div class="row" :class="{ active: element.id === builder.selectedId }" @click="builder.selectedId = element.id">
                 <el-icon class="drag"><Rank /></el-icon>
                 <span class="type">{{ label(element.type) }}</span>
-                <el-icon class="act" @click.stop="builder.toggleVisible(element.id)">
+                <el-icon class="act" title="Omhoog" @click.stop="builder.moveSection(element.id, -1)"><Top /></el-icon>
+                <el-icon class="act" title="Omlaag" @click.stop="builder.moveSection(element.id, 1)"><Bottom /></el-icon>
+                <el-icon class="act" title="Dupliceren" @click.stop="builder.duplicateSection(element.id)"><CopyDocument /></el-icon>
+                <el-icon class="act" :title="element.visible ? 'Verbergen' : 'Tonen'" @click.stop="builder.toggleVisible(element.id)">
                   <component :is="element.visible ? 'View' : 'Hide'" />
                 </el-icon>
-                <el-icon class="act danger" @click.stop="builder.removeSection(element.id)"><Delete /></el-icon>
+                <el-icon class="act danger" title="Verwijderen" @click.stop="builder.removeSection(element.id)"><Delete /></el-icon>
               </div>
             </template>
           </draggable>
@@ -84,13 +87,32 @@
           <div v-if="selected">
             <el-tag round style="margin-bottom: 14px">{{ label(selected.type) }}</el-tag>
             <el-form label-position="top">
-              <el-form-item v-for="(field, key) in schema" :key="key" :label="field.label">
+              <el-form-item v-for="(field, key) in schema" :key="key" :label="field.type === 'repeater' ? '' : field.label">
                 <el-input v-if="field.type === 'string'" v-model="selected.props[key]" @input="builder.markDirty()" />
                 <el-input v-else-if="field.type === 'textarea'" v-model="selected.props[key]" type="textarea" :rows="4" @input="builder.markDirty()" />
-                <el-input-number v-else-if="field.type === 'number'" v-model="selected.props[key]" :min="1" @change="builder.markDirty()" />
+                <el-input-number v-else-if="field.type === 'number'" v-model="selected.props[key]" :min="0" @change="builder.markDirty()" />
                 <el-select v-else-if="field.type === 'select'" v-model="selected.props[key]" @change="builder.markDirty()" style="width: 100%">
                   <el-option v-for="o in field.options" :key="o" :label="o" :value="o" />
                 </el-select>
+                <el-color-picker v-else-if="field.type === 'color'" v-model="selected.props[key]" @change="builder.markDirty()" />
+                <el-switch v-else-if="field.type === 'boolean'" v-model="selected.props[key]" @change="builder.markDirty()" />
+                <ImageUploader v-else-if="field.type === 'image'" v-model="selected.props[key]" @update:model-value="builder.markDirty()" />
+
+                <!-- Repeater: editable list of items -->
+                <div v-else-if="field.type === 'repeater'" class="repeater">
+                  <label class="rep-label">{{ field.label }}</label>
+                  <div v-for="(item, idx) in (selected.props[key] || [])" :key="idx" class="rep-item">
+                    <div class="rep-head"><span>#{{ idx + 1 }}</span><el-icon class="del" @click="removeItem(key, idx)"><Delete /></el-icon></div>
+                    <div v-for="(sub, sk) in field.itemFields" :key="sk" class="sub">
+                      <label>{{ sub.label }}</label>
+                      <el-select v-if="sub.type === 'select'" v-model="item[sk]" size="small" style="width: 100%" @change="builder.markDirty()">
+                        <el-option v-for="o in sub.options" :key="o" :label="o" :value="o" />
+                      </el-select>
+                      <el-input v-else v-model="item[sk]" size="small" @input="builder.markDirty()" />
+                    </div>
+                  </div>
+                  <el-button size="small" :icon="Plus" @click="addItem(key, field)">{{ field.addLabel || 'Toevoegen' }}</el-button>
+                </div>
               </el-form-item>
             </el-form>
           </div>
@@ -105,8 +127,9 @@
 import { computed, onMounted, ref } from 'vue';
 import draggable from 'vuedraggable';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { DocumentAdd, Upload, Plus, RefreshLeft, RefreshRight, Monitor, Iphone, Cellphone } from '@element-plus/icons-vue';
+import { DocumentAdd, Upload, Plus, Delete, RefreshLeft, RefreshRight, Monitor, Iphone, Cellphone, Top, Bottom, CopyDocument } from '@element-plus/icons-vue';
 import DynamicRenderer from '@/storefront/DynamicRenderer.vue';
+import ImageUploader from '@/components/ImageUploader.vue';
 import { useBuilderStore } from '@/stores/builder';
 
 const builder = useBuilderStore();
@@ -117,6 +140,22 @@ onMounted(() => builder.loadPage('home'));
 const selected = computed(() => builder.selected());
 const schema = computed(() => (selected.value ? builder.defFor(selected.value.type)?.propsSchema || {} : {}));
 const label = (type: string) => builder.defFor(type)?.label || type;
+
+function addItem(key: string, field: any) {
+  const sel = selected.value;
+  if (!sel) return;
+  if (!Array.isArray(sel.props[key])) sel.props[key] = [];
+  const item: Record<string, any> = {};
+  for (const sk of Object.keys(field.itemFields || {})) item[sk] = '';
+  sel.props[key].push(item);
+  builder.markDirty();
+}
+function removeItem(key: string, idx: number) {
+  const sel = selected.value;
+  if (!sel || !Array.isArray(sel.props[key])) return;
+  sel.props[key].splice(idx, 1);
+  builder.markDirty();
+}
 
 function paletteClone(def: any) {
   builder.snapshot();
@@ -159,6 +198,15 @@ async function publish() {
 .row.active { border-color: var(--el-color-primary); }
 .row .type { flex: 1; }
 .row .drag { cursor: grab; color: var(--el-text-color-secondary); }
-.row .act { cursor: pointer; }
+.row .act { cursor: pointer; color: var(--el-text-color-secondary); }
+.row .act:hover { color: var(--el-color-primary); }
 .row .act.danger:hover { color: var(--el-color-danger); }
+.repeater { width: 100%; }
+.rep-label { display: block; font-size: 0.85rem; color: var(--el-text-color-regular); margin-bottom: 8px; }
+.rep-item { border: 1px solid var(--el-border-color-light); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+.rep-head { display: flex; justify-content: space-between; align-items: center; color: var(--el-text-color-secondary); font-size: 0.8rem; margin-bottom: 6px; }
+.rep-head .del { cursor: pointer; }
+.rep-head .del:hover { color: var(--el-color-danger); }
+.sub { margin-bottom: 8px; }
+.sub label { display: block; font-size: 0.78rem; color: var(--el-text-color-secondary); margin-bottom: 2px; }
 </style>

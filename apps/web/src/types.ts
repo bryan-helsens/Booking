@@ -43,7 +43,7 @@ export interface ComponentDefinition {
   label: string;
   icon: string;
   category: string;
-  propsSchema: Record<string, { type: string; label: string; options?: string[] }>;
+  propsSchema: Record<string, any>;
   defaults: Record<string, any>;
 }
 

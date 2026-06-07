@@ -110,6 +110,24 @@ export const useBuilderStore = defineStore('builder', () => {
     if (s) s.visible = !s.visible;
   }
 
+  function duplicateSection(id: string) {
+    const idx = config.value.sections.findIndex((s) => s.id === id);
+    if (idx < 0) return;
+    snapshot();
+    const copy: Section = { ...clone(config.value.sections[idx]), id: uid() };
+    config.value.sections.splice(idx + 1, 0, copy);
+    selectedId.value = copy.id;
+  }
+
+  function moveSection(id: string, dir: -1 | 1) {
+    const idx = config.value.sections.findIndex((s) => s.id === id);
+    const to = idx + dir;
+    if (idx < 0 || to < 0 || to >= config.value.sections.length) return;
+    snapshot();
+    const arr = config.value.sections;
+    [arr[idx], arr[to]] = [arr[to], arr[idx]];
+  }
+
   function selected() {
     return config.value.sections.find((s) => s.id === selectedId.value) || null;
   }
@@ -132,7 +150,7 @@ export const useBuilderStore = defineStore('builder', () => {
   return {
     components, pages, config, slug, selectedId, dirty, canUndo, canRedo,
     loadComponents, loadPages, loadPage, createPage, defFor, makeSection,
-    addSection, removeSection, toggleVisible, selected, markDirty,
+    addSection, removeSection, toggleVisible, duplicateSection, moveSection, selected, markDirty,
     snapshot, undo, redo, saveDraft, publish,
   };
 });
