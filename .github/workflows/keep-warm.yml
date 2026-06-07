@@ -1,0 +1,29 @@
+name: Keep Render API warm
+
+# Render's free tier sleeps the API after ~15 min idle (causing a slow cold
+# start for the next visitor). This pings the health endpoint every 10 minutes
+# so the API stays awake and surfing to a tenant site is instant.
+#
+# NOTE: scheduled workflows only run from the repository's DEFAULT branch
+# (usually `main`). Merge/push this file to the default branch for the cron to
+# activate. Update the URL below if your Render API URL changes.
+
+on:
+  schedule:
+    - cron: '*/10 * * * *' # every 10 minutes
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API health endpoint
+        run: |
+          URL="https://booking-api-nosm.onrender.com/api/health"
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 70 "$URL" || echo 000)
+            echo "Attempt $i → HTTP $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 20
+          done
+          echo "API did not return 200 (it may have been cold-starting)."
