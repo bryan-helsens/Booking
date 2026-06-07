@@ -88,7 +88,7 @@ export const useBuilderStore = defineStore('builder', () => {
 
   function makeSection(type: string): Section {
     const def = defFor(type);
-    return { id: uid(), type, visible: true, props: clone(def?.defaults || {}) };
+    return { id: uid(), type, visible: true, props: clone(def?.defaults || {}), style: {} };
   }
 
   function addSection(type: string) {

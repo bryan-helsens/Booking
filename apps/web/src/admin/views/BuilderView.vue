@@ -87,6 +87,14 @@
           <div v-if="selected">
             <el-tag round style="margin-bottom: 14px">{{ label(selected.type) }}</el-tag>
             <el-form label-position="top">
+              <el-form-item label="Achtergrond">
+                <el-select :model-value="selected.style?.bg || 'none'" style="width: 100%" @change="setBg">
+                  <el-option label="Standaard" value="none" />
+                  <el-option label="Subtiel grijs" value="subtle" />
+                  <el-option label="Merkkleur" value="primary" />
+                  <el-option label="Donker" value="dark" />
+                </el-select>
+              </el-form-item>
               <el-form-item v-for="(field, key) in schema" :key="key" :label="field.type === 'repeater' ? '' : field.label">
                 <el-input v-if="field.type === 'string'" v-model="selected.props[key]" @input="builder.markDirty()" />
                 <el-input v-else-if="field.type === 'textarea'" v-model="selected.props[key]" type="textarea" :rows="4" @input="builder.markDirty()" />
@@ -140,6 +148,14 @@ onMounted(() => builder.loadPage('home'));
 const selected = computed(() => builder.selected());
 const schema = computed(() => (selected.value ? builder.defFor(selected.value.type)?.propsSchema || {} : {}));
 const label = (type: string) => builder.defFor(type)?.label || type;
+
+function setBg(val: string) {
+  const sel = selected.value;
+  if (!sel) return;
+  if (!sel.style) sel.style = {};
+  sel.style.bg = val;
+  builder.markDirty();
+}
 
 function addItem(key: string, field: any) {
   const sel = selected.value;

@@ -31,6 +31,7 @@ export interface Section {
   type: string;
   visible: boolean;
   props: Record<string, any>;
+  style?: { bg?: string };
 }
 
 export interface PageConfig {

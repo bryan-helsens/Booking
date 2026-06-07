@@ -210,6 +210,58 @@ const COMPONENTS = [
     propsSchema: { height: { type: 'number', label: 'Hoogte (px)' } },
     defaults: { height: 40 },
   },
+  {
+    type: 'pricing',
+    label: 'Prijslijst',
+    icon: 'PriceTag',
+    category: 'content',
+    propsSchema: {
+      title: { type: 'string', label: 'Titel' },
+      items: {
+        type: 'repeater',
+        label: 'Regels',
+        addLabel: 'Regel toevoegen',
+        itemFields: { name: { type: 'string', label: 'Naam' }, price: { type: 'string', label: 'Prijs' }, description: { type: 'string', label: 'Omschrijving' } },
+      },
+    },
+    defaults: { title: 'Prijslijst', items: [{ name: 'Knippen', price: '€ 30', description: 'Incl. styling' }, { name: 'Baard trimmen', price: '€ 20', description: '' }, { name: 'Hot towel shave', price: '€ 40', description: 'Klassieke scheerbeurt' }] },
+  },
+  {
+    type: 'map',
+    label: 'Kaart / locatie',
+    icon: 'LocationFilled',
+    category: 'footer',
+    propsSchema: {
+      title: { type: 'string', label: 'Titel' },
+      address: { type: 'string', label: 'Adres (leeg = contactadres)' },
+      height: { type: 'number', label: 'Hoogte (px)' },
+    },
+    defaults: { title: 'Waar je ons vindt', address: '', height: 340 },
+  },
+  {
+    type: 'logos',
+    label: "Logo's / partners",
+    icon: 'Connection',
+    category: 'content',
+    propsSchema: {
+      title: { type: 'string', label: 'Titel' },
+      images: { type: 'textarea', label: 'Logo-URLs (één per regel)' },
+    },
+    defaults: { title: 'Vertrouwd door', images: '' },
+  },
+  {
+    type: 'button',
+    label: 'Knop',
+    icon: 'Pointer',
+    category: 'content',
+    propsSchema: {
+      label: { type: 'string', label: 'Tekst' },
+      link: { type: 'string', label: 'Link (/booking of https://...)' },
+      variant: { type: 'select', label: 'Stijl', options: ['primary', 'outline'] },
+      align: { type: 'select', label: 'Uitlijning', options: ['left', 'center', 'right'] },
+    },
+    defaults: { label: 'Boek nu', link: '/booking', variant: 'primary', align: 'center' },
+  },
 ];
 
 const FEATURE_KEYS = [
@@ -351,7 +403,9 @@ const TENANTS: TenantSeed[] = [
       { id: 's4c', type: 'stats', visible: true, props: { title: '', bgColor: '', items: [{ value: '15', label: 'Jaar ervaring' }, { value: '8000+', label: 'Cuts' }, { value: '4.9', label: 'Google score' }] } },
       { id: 's5', type: 'booking', visible: true, props: { title: 'Book your slot' } },
       { id: 's6', type: 'testimonials', visible: true, props: { title: 'Reviews' } },
+      { id: 's6b', type: 'pricing', visible: true, style: { bg: 'subtle' }, props: { title: 'Prijslijst', items: [{ name: 'Classic Cut', price: '€ 30', description: 'Knippen incl. styling' }, { name: 'Baard Trim', price: '€ 20', description: 'Bijwerken & verzorgen' }, { name: 'Hot Towel Shave', price: '€ 40', description: 'Klassieke scheerbeurt' }] } },
       { id: 's7', type: 'contact', visible: true, props: { title: 'Find us' } },
+      { id: 's8', type: 'map', visible: true, props: { title: 'Waar je ons vindt', address: '', height: 340 } },
     ],
     features: { payments: false, reviews: true, waitlist: false, coupons: true, giftcards: true, email: true, sms: false },
     reviews: [

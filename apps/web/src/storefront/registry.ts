@@ -15,6 +15,10 @@ import ImageTextSection from './sections/ImageTextSection.vue';
 import VideoSection from './sections/VideoSection.vue';
 import FeaturesSection from './sections/FeaturesSection.vue';
 import SpacerSection from './sections/SpacerSection.vue';
+import PricingSection from './sections/PricingSection.vue';
+import MapSection from './sections/MapSection.vue';
+import LogosSection from './sections/LogosSection.vue';
+import ButtonSection from './sections/ButtonSection.vue';
 
 /**
  * Frontend component registry: maps a JSON `section.type` → Vue component.
@@ -38,6 +42,10 @@ export const sectionRegistry: Record<string, Component> = {
   video: VideoSection,
   features: FeaturesSection,
   spacer: SpacerSection,
+  pricing: PricingSection,
+  map: MapSection,
+  logos: LogosSection,
+  button: ButtonSection,
 };
 
 export function resolveSection(type: string): Component | null {
