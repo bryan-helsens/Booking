@@ -569,11 +569,24 @@ async function seedTenant(t: TenantSeed) {
 }
 
 async function main() {
+  // Safety: this seed is DESTRUCTIVE for the demo tenants (it resets their
+  // services/staff/bookings). It must never run automatically on production
+  // deploys. Guard it so it only runs when explicitly requested.
+  if (process.env.SEED_DEMO === 'false') {
+    console.log('SEED_DEMO=false — skipping demo seed (production-safe).');
+    return;
+  }
+  const existing = await prisma.tenant.count();
+  if (existing > 0 && process.env.SEED_DEMO !== 'force') {
+    console.log(`Database already has ${existing} tenant(s). Refusing to reseed.\n` + 'Run with SEED_DEMO=force to overwrite demo data.');
+    return;
+  }
+
   console.log('Seeding component registry...');
   await seedComponents();
   console.log('Seeding tenants...');
   for (const t of TENANTS) await seedTenant(t);
-  console.log('Done. Demo logins: admin@acme.nl / admin@studio.nl  (password: demo1234)');
+  console.log('Done. Demo logins: admin@<slug>.nl  (password: demo1234)');
 }
 
 main()

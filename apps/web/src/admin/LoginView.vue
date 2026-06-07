@@ -17,6 +17,7 @@
         </el-form-item>
         <el-button type="primary" style="width: 100%" :loading="loading" @click="submit">Inloggen</el-button>
       </el-form>
+      <p class="forgot"><router-link to="/forgot">Wachtwoord vergeten?</router-link></p>
 
       <el-divider>of</el-divider>
       <el-button style="width: 100%" @click="oauth('google')">Inloggen met Google (OAuth)</el-button>
@@ -86,4 +87,6 @@ h1 { margin: 0; }
 .hint { margin-top: 16px; }
 .signup { text-align: center; margin: 14px 0 0; color: var(--el-text-color-secondary); }
 .signup a { color: var(--el-color-primary); text-decoration: none; }
+.forgot { text-align: center; margin: 12px 0 0; }
+.forgot a { color: var(--el-text-color-secondary); text-decoration: none; font-size: 0.9rem; }
 </style>

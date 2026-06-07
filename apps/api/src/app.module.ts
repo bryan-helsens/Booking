@@ -11,6 +11,7 @@ import { PagesModule } from './modules/pages/pages.module';
 import { BookingModule } from './modules/booking/booking.module';
 import { MediaModule } from './modules/media/media.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { TenantsModule } from './modules/tenants/tenants.module';
     BookingModule,
     MediaModule,
     TenantsModule,
+    HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

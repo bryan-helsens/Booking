@@ -62,9 +62,23 @@ origin in `apps/api/src/main.ts`.
 - **Demo hints** (prefilled credentials + the demo-login banner) are hidden when
   `VITE_DEMO_MODE="false"` — already set in `netlify.toml` for production.
 
-## Going further (production hardening)
+## Production operations
 
-- Wire real OAuth callbacks; add rate-limiting / captcha on public signup.
-- Replace `db push` + seed with versioned `prisma migrate deploy`.
+- **Media storage**: set `S3_*` env vars (S3 or Cloudflare R2 / MinIO) so
+  uploads are durable. Without them, files go to local disk and are LOST on
+  redeploy. See `.env.example`.
+- **Seeding**: the build no longer seeds (seeding is destructive). Seed the
+  demo data once via the Render shell: `SEED_DEMO=force pnpm --filter @booking/api db:seed`.
+  Leave `SEED_DEMO` unset/`false` afterwards so deploys never clobber real data.
+- **Error tracking**: set `SENTRY_DSN` to capture 5xx errors.
+- **Health check**: `GET /api/health` returns `{ status, db, uptime }` — point
+  your uptime monitor here.
+- **Password reset**: `/forgot` + `/reset` flow is built; wire a real email
+  provider to deliver the reset link (currently logged / shown in non-prod).
+
+## Going further
+
+- Subscription billing (Stripe Billing) tied to feature flags; Stripe Connect
+  for tenant payments; calendar sync; real transactional email/SMS.
+- Versioned `prisma migrate deploy` (move to a single Postgres provider).
 - Per-tenant custom domains via the `Domain` table + on-demand TLS.
-- Object storage (S3/R2) for media uploads; wire Stripe/Mollie + Twilio.

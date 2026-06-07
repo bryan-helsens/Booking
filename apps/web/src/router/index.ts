@@ -17,6 +17,8 @@ export const router = createRouter({
     },
     // ── Admin dashboard ──
     { path: '/login', name: 'login', component: () => import('@/admin/LoginView.vue') },
+    { path: '/forgot', name: 'forgot', component: () => import('@/admin/ForgotPasswordView.vue') },
+    { path: '/reset', name: 'reset', component: () => import('@/admin/ResetPasswordView.vue') },
     { path: '/get-started', name: 'onboarding', component: () => import('@/admin/OnboardingView.vue') },
     // Bare booking widget for embedding on third-party sites (?tenant=slug).
     { path: '/embed', name: 'embed', component: () => import('@/storefront/EmbedView.vue') },

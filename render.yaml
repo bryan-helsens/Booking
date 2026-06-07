@@ -15,6 +15,9 @@ services:
     runtime: node
     plan: free
     rootDir: .
+    # NOTE: the build syncs the schema but does NOT seed — seeding is
+    # destructive for demo data and must not run on every deploy. Seed once
+    # via the Render shell:  SEED_DEMO=force pnpm --filter @booking/api db:seed
     buildCommand: |
       corepack enable
       pnpm install --frozen-lockfile
@@ -22,7 +25,6 @@ services:
       pnpm --filter @booking/api exec prisma generate --schema=prisma/schema.prod.prisma
       pnpm --filter @booking/api build
       pnpm --filter @booking/api exec prisma db push --schema=prisma/schema.prod.prisma --skip-generate
-      pnpm --filter @booking/api exec ts-node prisma/seed.ts
     startCommand: node apps/api/dist/main.js
     envVars:
       - key: DATABASE_URL

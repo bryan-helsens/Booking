@@ -63,6 +63,8 @@ model User {
   name      String
   role      String   @default("admin") // owner | admin | staff | viewer
   provider  String   @default("local") // local | google | microsoft
+  resetToken    String?
+  resetTokenExp DateTime?
   tenantId  String
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
