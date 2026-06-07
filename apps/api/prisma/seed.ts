@@ -411,6 +411,51 @@ const TENANTS: TenantSeed[] = [
       { name: 'Vera', title: 'Fine-line Artist' },
     ],
   },
+  {
+    slug: 'pilates',
+    name: 'Core & Co Pilates',
+    host: 'pilates.localhost',
+    mode: 'light',
+    tokens: { colorPrimary: '#db2777', colorSecondary: '#f59e0b', colorAccent: '#14b8a6', colorBg: '#fffafc', colorText: '#3f2233', fontBody: "'Montserrat', system-ui, sans-serif", fontHeading: "'Poppins', system-ui, sans-serif", radius: 18 },
+    content: {
+      companyName: 'Core & Co Pilates',
+      description: 'Sterker, soepeler en in balans — Pilates voor elk niveau.',
+      logoUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=Core&backgroundColor=db2777',
+      faviconUrl: '',
+      contact: { email: 'hallo@coreandco.nl', phone: '+31 70 333 2211', address: 'Frederikstraat 5, Den Haag' },
+      seo: { title: 'Core & Co Pilates — Boek je les', description: 'Reformer, Mat en privé Pilates in Den Haag.', keywords: 'pilates, reformer, den haag, mat pilates', ogImage: '' },
+      social: { facebook: '', instagram: 'https://instagram.com/coreandco', x: '', linkedin: '' },
+    },
+    services: [
+      { name: 'Reformer Pilates', description: 'Krachtige reformer-les in kleine groep.', imageUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600', durationMin: 50, priceCents: 2500, capacity: 6, bufferAfter: 10 },
+      { name: 'Mat Pilates', description: 'Klassieke matwork voor core-stabiliteit.', imageUrl: 'https://images.unsplash.com/photo-1591258739299-21e0e9f0a3b6?w=600', durationMin: 45, priceCents: 1800, capacity: 12, bufferAfter: 10 },
+      { name: 'Privé sessie', description: 'Een-op-een begeleiding op maat.', imageUrl: 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=600', durationMin: 60, priceCents: 6500, capacity: 1 },
+    ],
+    pageSections: [
+      { id: 's1', type: 'hero', visible: true, props: { title: 'Vind je kracht. Vind je balans.', subtitle: 'Pilates voor elk niveau, midden in Den Haag.', ctaLabel: 'Boek je eerste les', bgImage: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=1600', align: 'center' } },
+      { id: 's2', type: 'services', visible: true, props: { title: 'Onze lessen', columns: 3 } },
+      { id: 's3', type: 'openinghours', visible: true, props: { title: 'Lesrooster & openingstijden' } },
+      { id: 's4', type: 'booking', visible: true, props: { title: 'Reserveer je plek' } },
+      { id: 's5', type: 'testimonials', visible: true, props: { title: 'Wat onze leden zeggen' } },
+      { id: 's6', type: 'faq', visible: true, props: { title: 'Veelgestelde vragen', items: 'Heb ik ervaring nodig?|Nee, we hebben lessen voor elk niveau — ook complete beginners.\nWat moet ik meenemen?|Comfortabele kleding en antislip-sokken. De rest verzorgen wij.' } },
+      { id: 's7', type: 'contact', visible: true, props: { title: 'Bezoek de studio' } },
+    ],
+    features: { payments: false, reviews: true, waitlist: true, coupons: true, giftcards: true, email: true, sms: false },
+    reviews: [
+      { author: 'Anouk P.', rating: 5, quote: 'Na drie maanden voel ik me sterker dan ooit. Fijne kleine groepen.' },
+      { author: 'Wouter S.', rating: 5, quote: 'Top instructeurs en een rustige, mooie studio.' },
+    ],
+    coupons: [{ code: 'CORE10', percentOff: 10 }],
+    settings: {
+      bookingRules: { maxDaysAhead: 30, leadTimeMinutes: 90, slotIntervalMin: 0, cancellationHours: 12 },
+      regional: { currency: 'EUR', locale: 'nl-NL', timezone: 'Europe/Amsterdam' },
+      formFields: [{ key: 'level', label: 'Ervaringsniveau', type: 'select', required: false, options: ['Beginner', 'Gemiddeld', 'Gevorderd'] }],
+    },
+    staff: [
+      { name: 'Carla', title: 'Pilates-instructeur' },
+      { name: 'Femke', title: 'Reformer-specialist' },
+    ],
+  },
 ];
 
 function defaultBusinessHours(tenantId: string) {
