@@ -1,0 +1,26 @@
+{
+  "name": "booking-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Multi-tenant white-label booking platform (demo) — Vue 3 + NestJS + Prisma",
+  "scripts": {
+    "dev": "pnpm --parallel -r dev",
+    "dev:api": "pnpm --filter @booking/api dev",
+    "dev:web": "pnpm --filter @booking/web dev",
+    "db:setup": "pnpm --filter @booking/api db:setup",
+    "build": "pnpm -r build"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=8"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "esbuild"
+    ]
+  }
+}

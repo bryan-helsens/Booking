@@ -1,0 +1,47 @@
+:root {
+  --app-color-primary: #0ea5a4;
+  --app-color-secondary: #f59e0b;
+  --app-color-accent: #ec4899;
+  --app-color-bg: #ffffff;
+  --app-color-text: #1f2937;
+  --app-font-body: system-ui, sans-serif;
+  --app-font-heading: system-ui, sans-serif;
+  --app-radius: 12px;
+}
+
+* { box-sizing: border-box; }
+html, body, #app { height: 100%; margin: 0; }
+body {
+  font-family: var(--app-font-body);
+  color: var(--app-color-text);
+  background-color: var(--app-color-bg);
+  background-image: var(--app-bg-image, none);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+h1, h2, h3, h4 { font-family: var(--app-font-heading); }
+
+/* Storefront helpers */
+.sf-section { padding: 64px 24px; }
+.sf-container { max-width: 1100px; margin: 0 auto; }
+.sf-card {
+  border-radius: var(--app-radius);
+  overflow: hidden;
+}
+a { color: var(--app-color-primary); }
+
+html { scroll-behavior: smooth; }
+
+/* Scroll-reveal animation (v-reveal) */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.in-view { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* Section heading accent used across storefront sections */
+.sf-heading { text-align: center; margin-bottom: 8px; font-size: 2.1rem; }
+.sf-subheading { text-align: center; color: var(--el-text-color-secondary); margin: 0 auto 36px; max-width: 600px; }
+.sf-accent-bar { width: 56px; height: 4px; border-radius: 4px; background: var(--app-color-primary); margin: 0 auto 28px; }

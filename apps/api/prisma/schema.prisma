@@ -1,0 +1,243 @@
+// Multi-tenant white-label booking platform — demo schema (SQLite).
+// Design principles:
+//  - Every tenant-scoped table carries `tenantId` (row-level isolation).
+//  - Theme / page layout / feature flags live in JSON columns so new
+//    components & features can be added WITHOUT migrations.
+// NOTES (SQLite specifics — both lift on PostgreSQL):
+//  - SQLite has no native enums → we use String + app-level validation.
+//  - SQLite has no native Json type → JSON blobs are stored as String and
+//    (de)serialized in the service layer (see src/common/json.ts).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────── Tenancy & identity ───────────────────────────────
+
+model Tenant {
+  id        String   @id @default(cuid())
+  // `slug` doubles as the demo's tenant resolver (X-Tenant header / ?tenant=).
+  slug      String   @unique
+  name      String
+  status    String   @default("active") // active | suspended
+  // Flexible JSON-as-string bag for tenant-wide settings (booking rules,
+  // regional/currency, custom form fields, ...). New settings need no migration.
+  settings  String   @default("{}")
+  // Subscription / billing.
+  plan                 String    @default("free") // free | starter | pro
+  subscriptionStatus   String    @default("trialing") // trialing | active | past_due | canceled
+  trialEndsAt          DateTime?
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  domains       Domain[]
+  users         User[]
+  theme         ThemeConfig?
+  content       SiteContent?
+  pages         Page[]
+  featureFlags  FeatureFlag[]
+  services      Service[]
+  businessHours BusinessHours[]
+  bookings      Booking[]
+  reviews       Review[]
+  coupons       Coupon[]
+  staff         StaffMember[]
+}
+
+model Domain {
+  id       String  @id @default(cuid())
+  host     String  @unique // e.g. acme.localhost or boekingen.acme.nl
+  isCustom Boolean @default(false)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String
+  // Demo auth: plaintext-ish hash placeholder. Real impl uses bcrypt/argon2.
+  password  String
+  name      String
+  role      String   @default("admin") // owner | admin | staff | viewer
+  provider  String   @default("local") // local | google | microsoft
+  resetToken    String?
+  resetTokenExp DateTime?
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+}
+
+// ─────────────────────────────── Configuration (database-driven) ───────────────────────────────
+
+model ThemeConfig {
+  id        String   @id @default(cuid())
+  tenantId  String   @unique
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  mode      String   @default("light") // light | dark
+  // Design tokens (JSON-as-string): colors, typography, radius, backgrounds, ...
+  tokens    String
+  // Draft tokens for the live preview before publishing.
+  draft     String?
+  updatedAt DateTime @updatedAt
+}
+
+model SiteContent {
+  id          String  @id @default(cuid())
+  tenantId    String  @unique
+  tenant      Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  companyName String
+  description String  @default("")
+  logoUrl     String  @default("")
+  faviconUrl  String  @default("")
+  // Structured blobs kept as JSON-as-string so fields can grow without migrations.
+  contact     String // { email, phone, address }
+  seo         String // { title, description, keywords, ogImage }
+  social      String // { facebook, instagram, x, linkedin }
+}
+
+model Page {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  slug        String
+  title       String
+  isPublished Boolean  @default(true)
+  // JSON-as-string page-builder layout: { version, sections: [{ id, type, visible, props }] }
+  config      String
+  // Draft layout edited in the builder before publish.
+  draftConfig String?
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+}
+
+// Global registry of available builder blocks (not tenant-scoped).
+// New component types are seeded here; layouts reference them by `type`.
+model ComponentDefinition {
+  id          String  @id @default(cuid())
+  type        String  @unique // hero | services | booking | richtext | ...
+  label       String
+  icon        String  @default("Grid")
+  category    String  @default("content")
+  // JSON-as-string descriptor used to auto-generate the prop editor.
+  propsSchema String
+  defaults    String
+}
+
+model FeatureFlag {
+  id       String  @id @default(cuid())
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  key      String // payments | reviews | waitlist | coupons | giftcards | email | sms
+  enabled  Boolean @default(false)
+
+  @@unique([tenantId, key])
+  @@index([tenantId])
+}
+
+// ─────────────────────────────── Booking domain ───────────────────────────────
+
+model Service {
+  id           String    @id @default(cuid())
+  tenantId     String
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name         String
+  description  String    @default("")
+  imageUrl     String    @default("")
+  durationMin  Int       @default(60)
+  priceCents   Int       @default(0)
+  capacity     Int       @default(1)
+  bufferBefore Int       @default(0) // minutes
+  bufferAfter  Int       @default(0) // minutes
+  isActive     Boolean   @default(true)
+  bookings     Booking[]
+  staff        StaffMember[] @relation("ServiceStaff")
+
+  @@index([tenantId])
+}
+
+model StaffMember {
+  id        String    @id @default(cuid())
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String
+  title     String    @default("")
+  imageUrl  String    @default("")
+  isActive  Boolean   @default(true)
+  services  Service[] @relation("ServiceStaff")
+  bookings  Booking[]
+
+  @@index([tenantId])
+}
+
+model BusinessHours {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  weekday  Int // 0 = Sunday ... 6 = Saturday
+  openMin  Int // minutes from midnight, e.g. 540 = 09:00
+  closeMin Int // e.g. 1020 = 17:00
+  isClosed Boolean @default(false)
+
+  @@unique([tenantId, weekday])
+  @@index([tenantId])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  author     String
+  rating     Int      @default(5)
+  quote      String
+  isApproved Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([tenantId])
+}
+
+model Coupon {
+  id         String  @id @default(cuid())
+  tenantId   String
+  tenant     Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  code       String
+  percentOff Int     @default(0)
+  isActive   Boolean @default(true)
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  serviceId     String
+  service       Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  staffId       String?
+  staff         StaffMember? @relation(fields: [staffId], references: [id])
+  customerName  String
+  customerEmail String
+  startsAt      DateTime
+  endsAt        DateTime
+  status        String   @default("confirmed") // pending | confirmed | cancelled
+  notes         String   @default("")
+  createdAt     DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([serviceId])
+  @@index([staffId])
+}

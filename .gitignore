@@ -1,0 +1,26 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+
+# Prisma / SQLite
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal
+apps/api/prisma/dev.db
+apps/api/prisma/schema.prod.prisma
+
+# Uploaded media (demo stores on local disk)
+apps/api/uploads/
+uploads/
+
+# env
+.env
+.env.local
+
+# build
+apps/web/dist/
+apps/api/dist/
+
+# Local screenshot artifacts
+_screens/
+_*.mjs
