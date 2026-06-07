@@ -1,9 +1,20 @@
 <template>
   <div>
     <div class="head">
-      <h2>Personeel</h2>
-      <el-button type="primary" :icon="Plus" @click="openNew">Nieuwe medewerker</el-button>
+      <div class="title">
+        <h2>Personeel</h2>
+        <el-tag v-if="limit" :type="atLimit ? 'danger' : 'info'" round>{{ staff.length }} / {{ limit }}</el-tag>
+      </div>
+      <el-tooltip :disabled="!atLimit" content="Limiet bereikt — upgrade je abonnement">
+        <span>
+          <el-button type="primary" :icon="Plus" :disabled="atLimit" @click="openNew">Nieuwe medewerker</el-button>
+        </span>
+      </el-tooltip>
     </div>
+    <el-alert v-if="atLimit" type="warning" :closable="false" show-icon style="margin-bottom: 12px"
+      title="Je hebt het maximum aantal medewerkers voor je abonnement bereikt.">
+      <el-button size="small" type="primary" text @click="$router.push({ name: 'billing' })">Upgrade om meer toe te voegen →</el-button>
+    </el-alert>
 
     <el-table :data="staff" stripe>
       <el-table-column label="" width="70">
@@ -55,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Plus, Edit, Delete } from '@element-plus/icons-vue';
 import { api } from '@/api/client';
@@ -66,16 +77,20 @@ const site = useSiteStore();
 const staff = ref<any[]>([]);
 const services = ref<any[]>([]);
 const stats = ref<Record<string, { count: number; revenueCents: number }>>({});
+const limit = ref(0);
+const atLimit = computed(() => limit.value > 0 && staff.value.length >= limit.value);
 const dialog = ref(false);
 const saving = ref(false);
 const blank = () => ({ id: '', name: '', title: '', imageUrl: '', serviceIds: [] as string[], isActive: true });
 const form = ref<any>(blank());
 
 async function load() {
-  const [st, sv, an] = await Promise.all([api.get('/staff'), api.get('/services'), api.get('/analytics')]);
+  const [st, sv, an, bl] = await Promise.all([api.get('/staff'), api.get('/services'), api.get('/analytics'), api.get('/billing')]);
   staff.value = st.data;
   services.value = sv.data;
   stats.value = Object.fromEntries((an.data.perStaff || []).map((s: any) => [s.id, { count: s.count, revenueCents: s.revenueCents }]));
+  const plan = bl.data.plans.find((p: any) => p.id === bl.data.plan);
+  limit.value = plan?.limits?.staff || 0;
 }
 onMounted(load);
 
@@ -93,6 +108,8 @@ async function save() {
     dialog.value = false;
     await load();
     ElMessage.success('Opgeslagen');
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.message || 'Opslaan mislukt');
   } finally {
     saving.value = false;
   }
@@ -107,4 +124,5 @@ async function remove(row: any) {
 
 <style scoped>
 .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.title { display: flex; align-items: center; gap: 12px; }
 </style>

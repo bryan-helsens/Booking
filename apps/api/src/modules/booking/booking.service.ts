@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../../prisma/prisma.service';
 import { TenantContext } from '../../common/tenant-context.service';
 import { resolveSettings, isClosedOn } from '../../common/settings';
+import { planById } from '../../common/plans';
 
 @Injectable()
 export class BookingService {
@@ -18,8 +19,24 @@ export class BookingService {
     });
   }
 
-  createService(data: any) {
+  async createService(data: any) {
+    await this.assertWithinPlanLimit('services');
     return this.prisma.service.create({ data: { ...this.cleanService(data), tenantId: this.ctx.id } });
+  }
+
+  /** Enforce the subscription plan's limit on services / staff. */
+  private async assertWithinPlanLimit(kind: 'services' | 'staff') {
+    const tenantId = this.ctx.id;
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+    const limit = planById(tenant?.plan).limits[kind];
+    const count =
+      kind === 'services'
+        ? await this.prisma.service.count({ where: { tenantId } })
+        : await this.prisma.staffMember.count({ where: { tenantId } });
+    if (count >= limit) {
+      const noun = kind === 'services' ? 'diensten' : 'medewerkers';
+      throw new BadRequestException(`Je limiet van ${limit} ${noun} is bereikt op het ${planById(tenant?.plan).label}-plan. Upgrade je abonnement om er meer toe te voegen.`);
+    }
   }
 
   async updateService(id: string, data: any) {
@@ -62,7 +79,8 @@ export class BookingService {
     return service?.staff ?? [];
   }
 
-  createStaff(data: any) {
+  async createStaff(data: any) {
+    await this.assertWithinPlanLimit('staff');
     return this.prisma.staffMember.create({
       data: {
         tenantId: this.ctx.id,

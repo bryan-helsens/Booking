@@ -19,7 +19,7 @@ export const PLANS: Plan[] = [
     label: 'Free',
     priceCents: 0,
     features: ['reviews', 'email'],
-    limits: { staff: 1, services: 3 },
+    limits: { staff: 2, services: 3 },
   },
   {
     id: 'starter',

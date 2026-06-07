@@ -1,9 +1,20 @@
 <template>
   <div>
     <div class="head">
-      <h2>Diensten</h2>
-      <el-button type="primary" :icon="Plus" @click="openNew">Nieuwe dienst</el-button>
+      <div class="title">
+        <h2>Diensten</h2>
+        <el-tag v-if="limit" :type="atLimit ? 'danger' : 'info'" round>{{ services.length }} / {{ limit }}</el-tag>
+      </div>
+      <el-tooltip :disabled="!atLimit" content="Limiet bereikt — upgrade je abonnement">
+        <span>
+          <el-button type="primary" :icon="Plus" :disabled="atLimit" @click="openNew">Nieuwe dienst</el-button>
+        </span>
+      </el-tooltip>
     </div>
+    <el-alert v-if="atLimit" type="warning" :closable="false" show-icon style="margin-bottom: 12px"
+      title="Je hebt het maximum aantal diensten voor je abonnement bereikt.">
+      <el-button size="small" type="primary" text @click="$router.push({ name: 'billing' })">Upgrade om meer toe te voegen →</el-button>
+    </el-alert>
 
     <el-table :data="services" stripe>
       <el-table-column label="" width="70">
@@ -64,6 +75,8 @@ const site = useSiteStore();
 
 const services = ref<Service[]>([]);
 const stats = ref<Record<string, { count: number; revenueCents: number }>>({});
+const limit = ref(0);
+const atLimit = computed(() => limit.value > 0 && services.value.length >= limit.value);
 const dialog = ref(false);
 const saving = ref(false);
 const blank = () => ({ id: '', name: '', description: '', imageUrl: '', durationMin: 60, priceCents: 0, capacity: 1, bufferBefore: 0, bufferAfter: 0, isActive: true });
@@ -75,9 +88,11 @@ const priceEuro = computed({
 });
 
 async function load() {
-  const [sv, an] = await Promise.all([api.get('/services'), api.get('/analytics')]);
+  const [sv, an, bl] = await Promise.all([api.get('/services'), api.get('/analytics'), api.get('/billing')]);
   services.value = sv.data;
   stats.value = Object.fromEntries((an.data.perService || []).map((s: any) => [s.id, { count: s.count, revenueCents: s.revenueCents }]));
+  const plan = bl.data.plans.find((p: any) => p.id === bl.data.plan);
+  limit.value = plan?.limits?.services || 0;
 }
 onMounted(load);
 
@@ -92,6 +107,8 @@ async function save() {
     dialog.value = false;
     await load();
     ElMessage.success('Opgeslagen');
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.message || 'Opslaan mislukt');
   } finally {
     saving.value = false;
   }
@@ -108,4 +125,5 @@ const euro = (c: number) => site.formatMoney(c);
 
 <style scoped>
 .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.title { display: flex; align-items: center; gap: 12px; }
 </style>
